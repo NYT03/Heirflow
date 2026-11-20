@@ -89,6 +89,8 @@ export interface QuorumConfig {
 export interface ClaimState {
   claimId: string;
   deceasedUserId: string;
+  claimantId?: string;
+  evidencePath?: string;
   status: ClaimStatus;
   quorumConfig: QuorumConfig;
   submittedShares: StoredNomineeShare[];
@@ -99,6 +101,7 @@ export interface ClaimState {
   gracePeriodSeconds: number;
   initiatedAt: Date;
   updatedAt: Date;
+  executedAt?: Date;
   holdReason?: string;
   abortReason?: string;
   disputeReason?: string;

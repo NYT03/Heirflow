@@ -21,15 +21,19 @@ router.get('/capabilities', (req, res) => {
   return res.json({
     success: true,
     data: {
-      provider: 'Google Gmail Bank Account Discovery',
+      provider: 'Google Identity & Workspace',
       categories: [
-        { key: 'bank', label: 'Bank & UPI Accounts', description: 'Bank statements, netbanking alerts, GPay & UPI-linked bank accounts for nominee transfer' },
-      ],
-    },
+        { key: 'photos', label: 'Photos & Digital Media', description: 'Google Photos libraries, shared family albums, cloud archives' },
+        { key: 'moneyAndUpi', label: 'Money & UPI Accounts', description: 'Google Pay (GPay), PhonePe, Paytm, BHIM VPAs, bank statements' },
+        { key: 'crypto', label: 'Crypto Wallets & Exchanges', description: 'Binance, Coinbase, CoinDCX, WazirX, MetaMask email backups' },
+        { key: 'property', label: 'Property & Real Estate', description: 'Municipal property tax receipts, land registry deeds, home loan escrows' },
+        { key: 'connectedApps', label: 'Signed in with Google Apps', description: 'Third-party fintech, DigiLocker, investments, and cloud subscriptions' }
+      ]
+    }
   });
 });
 
-// POST /api/google/scan — Scan Gmail / Google account for digital & financial assets
+// POST /api/google/scan — Scan Google/Gmail account for assets
 router.post('/scan', auth, async (req, res) => {
   try {
     const { accessToken, email, forceLive } = req.body;

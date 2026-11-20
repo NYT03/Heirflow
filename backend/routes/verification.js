@@ -13,6 +13,9 @@ const {
   OfficialPortalVerifier,
 } = require('../verification-gate/dist/index.js');
 
+/**
+ * Rehydrates Date objects from JSON stored in heirflow-data.json
+ */
 function deserializeClaimState(jsonStr) {
   const obj = JSON.parse(jsonStr);
   if (obj.initiatedAt) obj.initiatedAt = new Date(obj.initiatedAt);
@@ -195,7 +198,7 @@ router.get('/claims', auth, (req, res) => {
         (c) =>
           c.deceasedUserId === req.user.id ||
           c.claimantId === req.user.id ||
-          (c.quorumConfig?.nomineeIds || []).includes(userEmail)
+          (c.quorumConfig?.nomineeIds || []).includes(req.user.email.toLowerCase())
       );
 
     return res.json({ success: true, data: claims });
@@ -229,6 +232,19 @@ router.post('/claims/initiate', auth, async (req, res) => {
       gracePeriodSeconds,
     } = req.body;
 
+    if (req.body.deceasedUserId && req.body.quorumConfig && req.body.certificate) {
+      const pdfBuffer = rawPdfBase64 ? Buffer.from(rawPdfBase64, 'base64') : undefined;
+      const result = await orchestrator.initiateClaim(
+        { ...req.body, claimantId: req.user.id, evidencePath: evidence_path },
+        pdfBuffer,
+        req.headers['x-correlation-id']
+      );
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error });
+      }
+      return res.status(201).json({ success: true, data: result.claimState });
+    }
+
     if (!deceased_email || !key_share) {
       return res.status(400).json({ success: false, error: 'deceased_email and key_share are required' });
     }
@@ -242,7 +258,11 @@ router.post('/claims/initiate', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Cannot file a claim against yourself' });
     }
 
-    // Validate nominee & key share against registered nominees
+    const existing = db.gate.findActiveClaim(req.user.id, deceased.id);
+    if (existing) {
+      return res.status(409).json({ success: false, error: 'An active claim already exists for this user' });
+    }
+
     const nominees = db.prepare('SELECT * FROM nominees WHERE user_id = ?').all(deceased.id);
     if (nominees.length === 0) {
       return res.status(400).json({ success: false, error: 'Estate owner has no registered nominees configured' });
@@ -358,7 +378,7 @@ router.post('/claims/initiate', auth, async (req, res) => {
           qrPayload: qrPayload || undefined,
         },
         initialShare: {
-          nomineeId: callerEmail,
+          nomineeId: req.user.email.toLowerCase(),
           rawShare: key_share.trim(),
         },
         gracePeriodSeconds: gracePeriodSeconds ? Number(gracePeriodSeconds) : 604800,

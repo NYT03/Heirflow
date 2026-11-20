@@ -1,23 +1,39 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
   ClaimState,
-  DeathCertificateMetadata,
   InitiateClaimSchema,
   NomineeKeyShareSubmission,
-  PdfInspectionResult,
 } from './types/index.js';
 import { parseCertificate, validateGovernmentDomain } from './certificateParser/index.js';
 import { MockRegistryVerifier, RegistryVerifier } from './registryVerifier/index.js';
 import { QuorumManager } from './quorumManager/index.js';
 import { GracePeriodService } from './gracePeriodService/index.js';
 import { globalAuditLogger } from './auditLogger/index.js';
+import { ClaimStore, InMemoryClaimStore } from './store/index.js';
+
+export type ExecutionCallback = (claimState: ClaimState, actor: string) => Promise<unknown> | unknown;
+
+export interface OrchestratorOptions {
+  registryVerifier?: RegistryVerifier;
+  store?: ClaimStore;
+  onExecuteClaim?: ExecutionCallback;
+}
 
 export class ClaimVerificationOrchestrator {
-  private claims: Map<string, ClaimState> = new Map();
+  private store: ClaimStore;
   private registryVerifier: RegistryVerifier;
+  private onExecuteClaim?: ExecutionCallback;
 
-  constructor(registryVerifier?: RegistryVerifier) {
-    this.registryVerifier = registryVerifier || new MockRegistryVerifier();
+  constructor(verifierOrOptions?: RegistryVerifier | OrchestratorOptions) {
+    if (verifierOrOptions && 'verifyRecord' in verifierOrOptions) {
+      this.registryVerifier = verifierOrOptions;
+      this.store = new InMemoryClaimStore();
+    } else {
+      const opts = verifierOrOptions || {};
+      this.registryVerifier = opts.registryVerifier || new MockRegistryVerifier();
+      this.store = opts.store || new InMemoryClaimStore();
+      this.onExecuteClaim = opts.onExecuteClaim;
+    }
   }
 
   public setRegistryVerifier(verifier: RegistryVerifier): void {
@@ -45,7 +61,6 @@ export class ClaimVerificationOrchestrator {
     const claimId = uuidv4();
     const now = new Date();
 
-    // Parse and inspect certificate
     const certMeta = parseCertificate({
       registrationNumber: certificate.registrationNumber,
       deceasedName: certificate.deceasedName,
@@ -58,6 +73,8 @@ export class ClaimVerificationOrchestrator {
     const claimState: ClaimState = {
       claimId,
       deceasedUserId,
+      claimantId: typeof input?.claimantId === 'string' ? input.claimantId : undefined,
+      evidencePath: typeof input?.evidencePath === 'string' ? input.evidencePath : undefined,
       status: 'PENDING_QUORUM',
       quorumConfig,
       submittedShares: [],
@@ -68,11 +85,12 @@ export class ClaimVerificationOrchestrator {
       updatedAt: now,
     };
 
-    this.claims.set(claimId, claimState);
+    this.store.save(claimState);
 
     globalAuditLogger.logEvent('CLAIM_INITIATED', {
       correlationId,
       claimId,
+      actor: claimState.claimantId,
       payload: {
         deceasedUserId,
         registrationNumber: certificate.registrationNumber,
@@ -81,12 +99,11 @@ export class ClaimVerificationOrchestrator {
       },
     });
 
-    // Optionally record first nominee share
     if (initialShare) {
       await this.submitKeyShare(claimId, initialShare, correlationId);
     }
 
-    return { success: true, claimState };
+    return { success: true, claimState: this.store.get(claimId) || claimState };
   }
 
   /**
@@ -97,7 +114,7 @@ export class ClaimVerificationOrchestrator {
     submission: NomineeKeyShareSubmission,
     correlationId?: string
   ): Promise<{ success: boolean; claimState?: ClaimState; error?: string }> {
-    const claimState = this.claims.get(claimId);
+    const claimState = this.store.get(claimId);
     if (!claimState) {
       return { success: false, error: `Claim '${claimId}' not found.` };
     }
@@ -107,12 +124,13 @@ export class ClaimVerificationOrchestrator {
       return { success: false, claimState, error: result.error };
     }
 
-    // If quorum was met, automatically execute verification pipeline
+    this.store.save(claimState);
+
     if (result.quorumReached && claimState.status === 'VERIFICATION_IN_PROGRESS') {
       await this.runVerificationPipeline(claimState, correlationId);
     }
 
-    return { success: true, claimState };
+    return { success: true, claimState: this.store.get(claimId) || claimState };
   }
 
   /**
@@ -129,31 +147,30 @@ export class ClaimVerificationOrchestrator {
     const cert = claimState.certificateMetadata;
     if (!cert) {
       GracePeriodService.holdForReview(claimState, 'Missing death certificate metadata', correlationId);
+      this.store.save(claimState);
       return claimState;
     }
 
-    // 1. PDF Signature / Tamper Evaluation
     if (claimState.pdfInspection) {
       const { hasEmbeddedSignature, tamperFlags, signatureIntegrity } = claimState.pdfInspection;
-
       if (!hasEmbeddedSignature || signatureIntegrity === 'MODIFIED_OR_TAMPERED') {
         const reason = `PDF signature integrity failure: ${tamperFlags.join('; ')}`;
         GracePeriodService.holdForReview(claimState, reason, correlationId);
+        this.store.save(claimState);
         return claimState;
       }
     }
 
-    // 2. Government Domain Check on QR Payload (if present)
     if (cert.verificationUrl) {
       const domainCheck = validateGovernmentDomain(cert.verificationUrl);
       if (!domainCheck.isValid) {
         const reason = `Security Violation: QR code points to unauthorized domain. ${domainCheck.reason}`;
         GracePeriodService.holdForReview(claimState, reason, correlationId);
+        this.store.save(claimState);
         return claimState;
       }
     }
 
-    // 3. Civil Registry Cross-Verification
     const regResult = await this.registryVerifier.verifyRecord({
       registrationNumber: cert.registrationNumber,
       deceasedName: cert.deceasedName,
@@ -166,14 +183,15 @@ export class ClaimVerificationOrchestrator {
     if (regResult.status !== 'VERIFIED') {
       const reason = `Registry verification status '${regResult.status}': ${regResult.mismatches.join('; ')}`;
       GracePeriodService.holdForReview(claimState, reason, correlationId);
+      this.store.save(claimState);
       return claimState;
     }
 
-    // 4. All checks passed and Quorum met -> Activate Grace Period!
     if (QuorumManager.isQuorumMet(claimState)) {
       GracePeriodService.activateGracePeriod(claimState, correlationId);
     }
 
+    this.store.save(claimState);
     return claimState;
   }
 
@@ -183,10 +201,11 @@ export class ClaimVerificationOrchestrator {
     initiator: string,
     correlationId?: string
   ): { success: boolean; claimState?: ClaimState; error?: string } {
-    const claimState = this.claims.get(claimId);
+    const claimState = this.store.get(claimId);
     if (!claimState) return { success: false, error: 'Claim not found' };
 
     GracePeriodService.triggerLivenessAbort(claimState, reason, initiator, correlationId);
+    this.store.save(claimState);
     return { success: true, claimState };
   }
 
@@ -196,18 +215,48 @@ export class ClaimVerificationOrchestrator {
     disputantId: string,
     correlationId?: string
   ): { success: boolean; claimState?: ClaimState; error?: string } {
-    const claimState = this.claims.get(claimId);
+    const claimState = this.store.get(claimId);
     if (!claimState) return { success: false, error: 'Claim not found' };
 
     GracePeriodService.raiseDispute(claimState, reason, disputantId, correlationId);
+    this.store.save(claimState);
     return { success: true, claimState };
   }
 
+  /**
+   * Executes post-mortem asset handover ONLY after the grace period has completed.
+   */
+  public async executeClaim(
+    claimId: string,
+    actor: string,
+    correlationId?: string
+  ): Promise<{ success: boolean; claimState?: ClaimState; executionResult?: unknown; error?: string }> {
+    const claimState = this.store.get(claimId);
+    if (!claimState) return { success: false, error: 'Claim not found' };
+
+    const result = GracePeriodService.executeAfterGracePeriod(claimState, actor, correlationId);
+    if (!result.success) {
+      return { success: false, claimState, error: result.message };
+    }
+
+    let executionResult: unknown;
+    if (this.onExecuteClaim) {
+      executionResult = await this.onExecuteClaim(claimState, actor);
+    }
+
+    this.store.save(claimState);
+    return { success: true, claimState, executionResult };
+  }
+
   public getClaim(claimId: string): ClaimState | undefined {
-    return this.claims.get(claimId);
+    return this.store.get(claimId);
+  }
+
+  public listClaimsForUser(userId: string): ClaimState[] {
+    return this.store.listForUser(userId);
   }
 
   public clear(): void {
-    this.claims.clear();
+    this.store.clear();
   }
 }

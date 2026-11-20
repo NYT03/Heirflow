@@ -172,5 +172,65 @@ export class GracePeriodService {
     }
     return Date.now() >= claimState.graceEndsAt.getTime();
   }
+
+  /**
+   * Finalizes execution ONLY if claim is in GRACE_PERIOD_ACTIVE and the grace timer has elapsed.
+   */
+  public static executeAfterGracePeriod(
+    claimState: ClaimState,
+    actor: string,
+    correlationId?: string
+  ): GracePeriodResult {
+    if (claimState.status !== 'GRACE_PERIOD_ACTIVE') {
+      return {
+        success: false,
+        status: claimState.status,
+        message: `Cannot execute claim in status '${claimState.status}'. Must be 'GRACE_PERIOD_ACTIVE'.`,
+      };
+    }
+
+    if (!claimState.graceEndsAt) {
+      return {
+        success: false,
+        status: claimState.status,
+        message: 'Grace period end timestamp is missing.',
+      };
+    }
+
+    const msRemaining = claimState.graceEndsAt.getTime() - Date.now();
+    if (msRemaining > 0) {
+      const secondsRemaining = Math.ceil(msRemaining / 1000);
+      return {
+        success: false,
+        status: claimState.status,
+        graceEndsAt: claimState.graceEndsAt,
+        secondsRemaining,
+        message: `Grace period has not finished yet. ${secondsRemaining} seconds remaining.`,
+      };
+    }
+
+    const now = new Date();
+    claimState.status = 'EXECUTED';
+    claimState.executedAt = now;
+    claimState.updatedAt = now;
+
+    globalAuditLogger.logEvent('CLAIM_EXECUTED', {
+      correlationId,
+      claimId: claimState.claimId,
+      actor,
+      payload: {
+        executedAt: now.toISOString(),
+        graceEndedAt: claimState.graceEndsAt.toISOString(),
+      },
+    });
+
+    return {
+      success: true,
+      status: claimState.status,
+      graceEndsAt: claimState.graceEndsAt,
+      secondsRemaining: 0,
+      message: 'Grace period complete. Claim executed.',
+    };
+  }
 }
 

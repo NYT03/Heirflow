@@ -4,6 +4,7 @@ backend/node_modules/
 frontend/node_modules/
 backend/verification-gate/node_modules/
 Skills/
+
 # Environment variables & secrets
 !*.example
 .env
@@ -13,6 +14,9 @@ backend/.env
 frontend/.env
 backend/.env.gcp.example
 backend/gcp-key.json
+!*.example
+*gcp-key*.json
+service-account*.json
 
 # Production builds
 dist/

@@ -1,7 +1,15 @@
 require('dotenv').config();
-const Database = require('better-sqlite3');
-const bcrypt = require('bcryptjs');
+const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+const {
+  COLLECTIONS,
+  initAndHydrate,
+  syncUpsert,
+  syncDelete,
+  isCloudConnected,
+} = require('./services/cloudDatabase');
 
 const db = new Database(path.join(__dirname, 'heirflow.db'));
 
@@ -151,7 +159,242 @@ function seedDemoData() {
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count > 0) return;
 
-  const { v4: uuidv4 } = require('uuid');
+        // User by email
+        if (lower.includes('from users where email = ?')) {
+          const email = params[0];
+          const user = tables.users.find(u => u.email === email);
+          return user ? { ...user } : undefined;
+        }
+
+        // User by id
+        if (lower.includes('from users where id = ?')) {
+          const id = params[0];
+          const user = tables.users.find(u => u.id === id);
+          return user ? { ...user } : undefined;
+        }
+
+        // Asset by id and user_id
+        if (lower.includes('from assets where id = ? and user_id = ?')) {
+          const [id, user_id] = params;
+          const asset = tables.assets.find(a => a.id === id && a.user_id === user_id);
+          return asset ? { ...asset } : undefined;
+        }
+
+        // Asset by id
+        if (lower.includes('from assets where id = ?')) {
+          const [id] = params;
+          const asset = tables.assets.find(a => a.id === id);
+          return asset ? { ...asset } : undefined;
+        }
+
+        // Nominee by id and user_id
+        if (lower.includes('from nominees where id = ? and user_id = ?')) {
+          const [id, user_id] = params;
+          const nominee = tables.nominees.find(n => n.id === id && n.user_id === user_id);
+          return nominee ? { ...nominee } : undefined;
+        }
+
+        // Nominee by id
+        if (lower.includes('from nominees where id = ?')) {
+          const [id] = params;
+          const nominee = tables.nominees.find(n => n.id === id);
+          return nominee ? { ...nominee } : undefined;
+        }
+
+        // Active claim check
+        if (lower.includes('from claims where claimant_id = ? and deceased_user_id = ?')) {
+          const [claimant_id, deceased_id] = params;
+          const claim = tables.claims.find(c =>
+            c.claimant_id === claimant_id &&
+            c.deceased_user_id === deceased_id &&
+            c.status !== 'rejected' &&
+            c.status !== 'completed'
+          );
+          return claim ? { ...claim } : undefined;
+        }
+
+        // Claim by id
+        if (lower.includes('from claims where id = ?')) {
+          const [id] = params;
+          const claim = tables.claims.find(c => c.id === id);
+          return claim ? { ...claim } : undefined;
+        }
+
+        // Active claims count (verification gate)
+        if (lower.includes('count(*) as count from gate_claims')) {
+          const [id1, id2] = params;
+          const active = tables.gate_claims.filter(c =>
+            (c.claimant_id === id1 || c.deceased_user_id === id2) &&
+            c.status !== 'EXECUTED' &&
+            c.status !== 'REJECTED' &&
+            c.status !== 'ABORTED_LIVENESS'
+          );
+          return { count: active.length };
+        }
+
+        // Active claims count (legacy)
+        if (lower.includes('count(*) as count from claims')) {
+          const [id1, id2] = params;
+          const active = tables.claims.filter(c =>
+            (c.claimant_id === id1 || c.deceased_user_id === id2) &&
+            c.status !== 'completed' &&
+            c.status !== 'rejected'
+          );
+          return { count: active.length };
+        }
+
+        return undefined;
+      },
+
+      all: (...params) => {
+        // Assets with JOIN nominees
+        if (lower.includes('from assets a') && lower.includes('join nominees n')) {
+          const [userId] = params;
+          const userAssets = tables.assets.filter(a => a.user_id === userId);
+          return userAssets.map(a => {
+            const nominee = a.nominee_id ? tables.nominees.find(n => n.id === a.nominee_id) : null;
+            return {
+              ...a,
+              nominee_name: nominee ? nominee.name : null,
+              nominee_email: nominee ? nominee.email : null
+            };
+          }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        // Plain assets by user_id
+        if (lower.includes('from assets where user_id = ?')) {
+          const [userId] = params;
+          return tables.assets.filter(a => a.user_id === userId);
+        }
+
+        // Nominees by user_id
+        if (lower.includes('from nominees where user_id = ?')) {
+          const [userId] = params;
+          return tables.nominees.filter(n => n.user_id === userId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        // Claims with JOIN users claimant & deceased
+        if (lower.includes('from claims c') && lower.includes('join users claimant')) {
+          const [id1, id2] = params;
+          const userClaims = tables.claims.filter(c => c.claimant_id === id1 || c.deceased_user_id === id2);
+          return userClaims.map(c => {
+            const claimant = tables.users.find(u => u.id === c.claimant_id);
+            const deceased = tables.users.find(u => u.id === c.deceased_user_id);
+            return {
+              ...c,
+              claimant_name: claimant ? claimant.name : 'Unknown',
+              claimant_email: claimant ? claimant.email : 'Unknown',
+              deceased_name: deceased ? deceased.name : 'Unknown',
+              deceased_email: deceased ? deceased.email : 'Unknown'
+            };
+          }).sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+        }
+
+        // Claim actions with JOIN assets
+        if (lower.includes('from claim_actions ca') && lower.includes('join assets a')) {
+          const [claimId] = params;
+          const actions = tables.claim_actions.filter(ca => ca.claim_id === claimId);
+          return actions.map(ca => {
+            const asset = tables.assets.find(a => a.id === ca.asset_id);
+            return {
+              ...ca,
+              asset_name: asset ? asset.name : 'Unknown Asset',
+              asset_type: asset ? asset.type : 'Unknown'
+            };
+          }).sort((a, b) => new Date(b.executed_at) - new Date(a.executed_at));
+        }
+
+        // Plain claim actions by claim_id
+        if (lower.includes('from claim_actions where claim_id = ?')) {
+          const [claimId] = params;
+          return tables.claim_actions.filter(ca => ca.claim_id === claimId);
+        }
+
+        // Audit logs
+        if (lower.includes('from audit_logs where user_id = ?')) {
+          const [userId] = params;
+          return tables.audit_logs.filter(l => l.user_id === userId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 10);
+        }
+
+        return [];
+      }
+    };
+  },
+
+  // Direct persistence helpers for the Verification Gate module
+  gate: {
+    saveClaim: (record) => {
+      const idx = tables.gate_claims.findIndex(c => c.claim_id === record.claim_id);
+      if (idx >= 0) {
+        tables.gate_claims[idx] = { ...tables.gate_claims[idx], ...record };
+      } else {
+        tables.gate_claims.push(record);
+      }
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIMS, record.claim_id, tables.gate_claims.find(c => c.claim_id === record.claim_id));
+    },
+    getClaim: (claimId) => {
+      return tables.gate_claims.find(c => c.claim_id === claimId);
+    },
+    listClaims: () => {
+      return tables.gate_claims
+        .map(c => {
+          const deceased = tables.users.find(u => u.id === c.deceased_user_id);
+          return {
+            ...c,
+            deceased_name: deceased ? deceased.name : 'Unknown',
+            deceased_email: deceased ? deceased.email : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.initiated_at) - new Date(a.initiated_at));
+    },
+    clearClaims: () => {
+      tables.gate_claim_actions = [];
+      tables.gate_claims = [];
+      saveData();
+    },
+    insertAction: (action) => {
+      const entry = {
+        ...action,
+        executed_at: action.executed_at || new Date().toISOString()
+      };
+      tables.gate_claim_actions.push(entry);
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIM_ACTIONS, entry.id, entry);
+    },
+    listActions: (claimId) => {
+      return tables.gate_claim_actions
+        .filter(a => a.claim_id === claimId)
+        .map(a => {
+          const asset = tables.assets.find(as => as.id === a.asset_id);
+          return {
+            ...a,
+            asset_name: asset ? asset.name : 'Unknown Asset',
+            asset_type: asset ? asset.type : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.executed_at) - new Date(a.executed_at));
+    },
+    findActiveClaim: (claimantId, deceasedUserId) => {
+      return tables.gate_claims.find(
+        c =>
+          c.claimant_id === claimantId &&
+          c.deceased_user_id === deceasedUserId &&
+          !['REJECTED', 'EXECUTED', 'ABORTED_LIVENESS'].includes(c.status)
+      );
+    }
+  },
+
+  initCloud: () => initAndHydrate(tables),
+  isCloudConnected
+};
+
+// Seed demo data if users empty
+function seedDemoData() {
+  if (tables.users.length > 0) return;
 
   const johnId = uuidv4();
   const janeId = uuidv4();
@@ -159,42 +402,72 @@ function seedDemoData() {
   const johnHash = bcrypt.hashSync('demo123', 10);
   const janeHash = bcrypt.hashSync('demo123', 10);
 
-  db.prepare(`INSERT INTO users (id, name, email, password_hash, phone, kyc_status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-    johnId, 'John Doe', 'john@demo.com', johnHash, '+1-555-0101', 'verified'
-  );
-  db.prepare(`INSERT INTO users (id, name, email, password_hash, phone, kyc_status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-    janeId, 'Jane Smith', 'jane@demo.com', janeHash, '+1-555-0202', 'pending'
-  );
+  tables.users.push({
+    id: johnId,
+    name: 'John Doe',
+    email: 'john@demo.com',
+    password_hash: johnHash,
+    phone: '+1-555-0101',
+    kyc_status: 'verified',
+    created_at: new Date().toISOString()
+  });
 
-  // Add sample assets for John
+  tables.users.push({
+    id: janeId,
+    name: 'Jane Smith',
+    email: 'jane@demo.com',
+    password_hash: janeHash,
+    phone: '+1-555-0202',
+    kyc_status: 'pending',
+    created_at: new Date().toISOString()
+  });
+
   const assetId1 = uuidv4();
   const assetId2 = uuidv4();
-  db.prepare(`INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-    assetId1, johnId, 'bank', 'Chase Checking Account',
-    JSON.stringify({ bank: 'Chase Bank', account_number: '****1234', routing: '021000021' }),
-    'Transfer to nominee upon verified claim. Contact Chase estate services at 1-800-935-9935.',
-    janeId
-  );
-  db.prepare(`INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-    assetId2, johnId, 'crypto', 'Bitcoin Wallet',
-    JSON.stringify({ wallet_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf', exchange: 'Coinbase' }),
-    'Recovery phrase stored in LastPass vault. Nominee should contact Coinbase support with death certificate.',
-    janeId
-  );
+  tables.assets.push({
+    id: assetId1,
+    user_id: johnId,
+    type: 'bank',
+    name: 'Chase Checking Account',
+    details: JSON.stringify({ bank: 'Chase Bank', account_number: '****1234', routing: '021000021' }),
+    instructions: 'Transfer to nominee upon verified claim. Contact Chase estate services at 1-800-935-9935.',
+    nominee_id: janeId,
+    created_at: new Date().toISOString()
+  });
 
-  // Add Jane as a nominee for John
+  tables.assets.push({
+    id: assetId2,
+    user_id: johnId,
+    type: 'crypto',
+    name: 'Bitcoin Wallet',
+    details: JSON.stringify({ wallet_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf', exchange: 'Coinbase' }),
+    instructions: 'Recovery phrase stored in LastPass vault. Nominee should contact Coinbase support with death certificate.',
+    nominee_id: janeId,
+    created_at: new Date().toISOString()
+  });
+
   const nomineeId = uuidv4();
-  db.prepare(`INSERT INTO nominees (id, user_id, name, email, phone, relationship, key_share, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    nomineeId, johnId, 'Jane Smith', 'jane@demo.com', '+1-555-0202', 'spouse',
-    `HEIRFLOW-SHARE-${uuidv4().split('-').join('').substring(0, 24).toUpperCase()}`,
-    JSON.stringify({ can_view_assets: true, can_initiate_claims: true, can_access_files: true })
-  );
+  tables.nominees.push({
+    id: nomineeId,
+    user_id: johnId,
+    name: 'Jane Smith',
+    email: 'jane@demo.com',
+    phone: '+1-555-0202',
+    relationship: 'spouse',
+    key_share: `HEIRFLOW-SHARE-${uuidv4().split('-').join('').substring(0, 24).toUpperCase()}`,
+    permissions: JSON.stringify({ can_view_assets: true, can_initiate_claims: true, can_access_files: true }),
+    created_at: new Date().toISOString()
+  });
 
-  // Audit log
-  db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
-    uuidv4(), johnId, 'SEED_DATA_CREATED', JSON.stringify({ message: 'Demo data seeded' })
-  );
+  tables.audit_logs.push({
+    id: uuidv4(),
+    user_id: johnId,
+    action: 'SEED_DATA_CREATED',
+    details: JSON.stringify({ message: 'Demo data seeded' }),
+    created_at: new Date().toISOString()
+  });
 
+  saveData();
   console.log('✅ Demo data seeded: john@demo.com and jane@demo.com (password: demo123)');
 }
 
@@ -333,4 +606,3 @@ db.blockchain = {
 };
 
 module.exports = db;
-

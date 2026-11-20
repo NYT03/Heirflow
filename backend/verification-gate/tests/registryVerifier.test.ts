@@ -120,6 +120,18 @@ describe('Civil Registry Verification & Cross-Matching', () => {
       expect(res.status).toBe('PORTAL_UNAVAILABLE');
       expect(res.mismatches[0]).toContain('API credentials');
     });
+
+    it('should fail safely with PORTAL_UNAVAILABLE even when apiKey is set until live gateway is wired', async () => {
+      const verifier = new OfficialPortalVerifier({ apiKey: 'test-live-key-123' });
+      const res = await verifier.verifyRecord({
+        registrationNumber: 'CRS-1234',
+        deceasedName: 'John Doe',
+        dateOfDeath: '2024-01-01',
+      });
+
+      expect(res.status).toBe('PORTAL_UNAVAILABLE');
+      expect(res.mismatches[0]).toContain('Failing safely');
+    });
   });
 });
 

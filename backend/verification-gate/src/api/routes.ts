@@ -16,7 +16,10 @@ export function createVerificationRouter(orchestrator: ClaimVerificationOrchestr
   router.post('/claims/initiate', async (req: Request, res: Response) => {
     try {
       const correlationId = (req.headers['x-correlation-id'] as string) || undefined;
-      const result = await orchestrator.initiateClaim(req.body, undefined, correlationId);
+      const pdfBuffer = req.body?.rawPdfBase64
+        ? Buffer.from(req.body.rawPdfBase64, 'base64')
+        : undefined;
+      const result = await orchestrator.initiateClaim(req.body, pdfBuffer, correlationId);
 
       if (!result.success) {
         return res.status(400).json({ success: false, error: result.error });
@@ -168,6 +171,29 @@ export function createVerificationRouter(orchestrator: ClaimVerificationOrchestr
       }
 
       return res.json({ success: true, data: inspection });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // POST /api/verification/claims/:claimId/execute
+  router.post('/claims/:claimId/execute', async (req: Request, res: Response) => {
+    try {
+      const claimId = String(req.params.claimId);
+      const correlationId = (req.headers['x-correlation-id'] as string) || undefined;
+      const actor = String(req.body?.actor || 'SYSTEM');
+
+      const result = await orchestrator.executeClaim(claimId, actor, correlationId);
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error, data: result.claimState });
+      }
+
+      return res.json({
+        success: true,
+        data: result.claimState,
+        executionResult: result.executionResult,
+        message: 'Grace period complete. Asset handover executed.',
+      });
     } catch (err: any) {
       return res.status(500).json({ success: false, error: err.message });
     }

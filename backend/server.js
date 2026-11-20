@@ -13,8 +13,9 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Initialize DB (runs table creation + seed)
-require('./db');
+// Initialize DB & hydrate from Google Cloud Firestore if configured
+const db = require('./db');
+db.initCloud().catch((err) => console.warn('Cloud DB init skipped:', err.message));
 
 // API Routes
 const authRoutes = require('./routes/auth');
@@ -25,6 +26,7 @@ const geminiRoutes = require('./routes/gemini');
 const storageRoutes = require('./routes/storage');
 const verificationRoutes = require('./routes/verification');
 const aaRoutes = require('./routes/accountAggregator');
+const googleRoutes = require('./routes/googleDiscovery');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
@@ -34,6 +36,7 @@ app.use('/api/gemini', geminiRoutes);
 app.use('/api/storage', storageRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/aa', aaRoutes);
+app.use('/api/google', googleRoutes);
 
 // Health check endpoint (for Cloud Run probes and monitoring)
 app.get('/api/health', (req, res) => {
@@ -43,6 +46,7 @@ app.get('/api/health', (req, res) => {
       status: 'ok',
       service: 'HeirFlow API',
       cloud: process.env.K_SERVICE ? 'Google Cloud Run' : 'local',
+      database: db.isCloudConnected() ? 'Google Cloud Firestore (6 behavioral collections)' : 'local_json_fallback',
       storage: process.env.GCS_BUCKET_NAME ? 'Google Cloud Storage' : 'local_fallback',
       ai: process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' ? 'Google Gemini 1.5 Flash' : 'mock_fallback',
       version: '1.0.0',

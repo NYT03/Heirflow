@@ -157,4 +157,43 @@ describe('Integration: Nominee Death Verification & Quorum Gate End-to-End', () 
     expect(attempt.success).toBe(false);
     expect(attempt.error).toContain('terminal state');
   });
+
+  it('Execution Guard: blocks execution before grace period ends, allows after expiry', async () => {
+    const initRes = await orchestrator.initiateClaim({
+      deceasedUserId: 'deceased-john-123',
+      quorumConfig: {
+        requiredQuorum: 1,
+        totalNominees: 1,
+        nomineeIds: ['nominee-alice'],
+      },
+      certificate: {
+        registrationNumber: 'GJ-AHM-2024-D-098234',
+        deceasedName: 'John Doe',
+        dateOfDeath: '2024-11-01',
+        stateOrMunicipality: 'Gujarat e-Olakh',
+      },
+      initialShare: {
+        nomineeId: 'nominee-alice',
+        rawShare: 'HEIRFLOW-SHARE-alice-key-1234567890',
+      },
+      gracePeriodSeconds: 60,
+    });
+
+    const claimId = initRes.claimState!.claimId;
+
+    // Attempt premature execution while grace period is active
+    const earlyExec = await orchestrator.executeClaim(claimId, 'nominee-alice');
+    expect(earlyExec.success).toBe(false);
+    expect(earlyExec.error).toContain('Grace period has not finished');
+    expect(orchestrator.getClaim(claimId)!.status).toBe('GRACE_PERIOD_ACTIVE');
+
+    // Simulate grace period completion
+    const claim = orchestrator.getClaim(claimId)!;
+    claim.graceEndsAt = new Date(Date.now() - 1000);
+
+    const validExec = await orchestrator.executeClaim(claimId, 'nominee-alice');
+    expect(validExec.success).toBe(true);
+    expect(orchestrator.getClaim(claimId)!.status).toBe('EXECUTED');
+    expect(orchestrator.getClaim(claimId)!.executedAt).toBeDefined();
+  });
 });

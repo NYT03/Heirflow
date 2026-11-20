@@ -376,6 +376,74 @@ const NomineeClaim: React.FC = () => {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Certificate Reg. Number *</label>
+                <input
+                  type="text"
+                  value={form.registrationNumber}
+                  onChange={e => setForm(p => ({ ...p, registrationNumber: e.target.value }))}
+                  placeholder="GJ-AHM-2024-D-098234"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Deceased Name on Cert *</label>
+                <input
+                  type="text"
+                  value={form.deceasedName}
+                  onChange={e => setForm(p => ({ ...p, deceasedName: e.target.value }))}
+                  placeholder="John Doe"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Date of Death *</label>
+                <input
+                  type="date"
+                  value={form.dateOfDeath}
+                  onChange={e => setForm(p => ({ ...p, dateOfDeath: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Registry / State Source *</label>
+                <input
+                  type="text"
+                  value={form.stateOrMunicipality}
+                  onChange={e => setForm(p => ({ ...p, stateOrMunicipality: e.target.value }))}
+                  placeholder="Central CRS / Gujarat e-Olakh"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">QR Verification URL (.gov.in / .nic.in)</label>
+                <input
+                  type="url"
+                  value={form.qrPayload}
+                  onChange={e => setForm(p => ({ ...p, qrPayload: e.target.value }))}
+                  placeholder="https://eolakh.gujarat.gov.in/verify/..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Grace Period</label>
+                <select
+                  value={form.gracePeriodSeconds}
+                  onChange={e => setForm(p => ({ ...p, gracePeriodSeconds: Number(e.target.value) }))}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                >
+                  <option value={10}>10 Seconds (Demo Mode)</option>
+                  <option value={60}>1 Minute (Demo Mode)</option>
+                  <option value={604800}>7 Days (Production)</option>
+                  <option value={1209600}>14 Days (Production)</option>
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">Death Certificate Document (optional)</label>
               <label className="flex items-center gap-3 w-full bg-slate-900 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl px-4 py-3.5 cursor-pointer transition-colors">
