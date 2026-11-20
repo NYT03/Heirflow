@@ -235,29 +235,16 @@ export class OfficialPortalVerifier implements RegistryVerifier {
       };
     }
 
-    try {
-      // In production: performs authenticated mutual TLS API call to official API gateway
-      return {
-        status: 'VERIFIED',
-        matchedRecord: {
-          registrationNumber: query.registrationNumber,
-          deceasedName: query.deceasedName,
-          dateOfDeath: query.dateOfDeath,
-          status: 'REGISTERED',
-          issuingAuthority: 'Civil Registration System (Registrar General of India)',
-        },
-        mismatches: [],
-        verifiedAt: now,
-        provider: this.providerName,
-      };
-    } catch (err: any) {
-      return {
-        status: 'PORTAL_UNAVAILABLE',
-        mismatches: [`Failed to connect to government registry: ${err.message}`],
-        verifiedAt: now,
-        provider: this.providerName,
-      };
-    }
+    // Fail-safe: Never return VERIFIED without a live, authenticated response from the official gateway.
+    return {
+      status: 'PORTAL_UNAVAILABLE',
+      mismatches: [
+        `OfficialPortalVerifier (${this.apiEndpoint}) is a stubbed connector; live mTLS/API integration is not yet implemented. Failing safely instead of auto-verifying.`,
+      ],
+      verifiedAt: now,
+      provider: this.providerName,
+      details: 'Fail-safe PORTAL_UNAVAILABLE returned.',
+    };
   }
 }
 

@@ -30,18 +30,58 @@ export interface Nominee {
   created_at?: string;
 }
 
-export interface Claim {
-  id: string;
-  status: string;
-  deceased_user_id: string;
-  claimant_id: string;
-  submitted_at: string;
-  grace_until?: string;
-  evidence_path?: string;
-  claimant_name?: string;
-  claimant_email?: string;
+export interface GateClaim {
+  claimId: string;
+  deceasedUserId: string;
+  claimantId?: string;
   deceased_name?: string;
   deceased_email?: string;
+  status:
+    | 'PENDING_QUORUM'
+    | 'VERIFICATION_IN_PROGRESS'
+    | 'GRACE_PERIOD_ACTIVE'
+    | 'HOLD_FOR_REVIEW'
+    | 'DISPUTED'
+    | 'ABORTED_LIVENESS'
+    | 'REJECTED'
+    | 'EXECUTED';
+  quorumConfig: {
+    requiredQuorum: number;
+    totalNominees: number;
+    nomineeIds: string[];
+  };
+  submittedShares: Array<{
+    nomineeId: string;
+    shareHash: string;
+    submittedAt: string;
+    maskedIdentifier: string;
+  }>;
+  certificateMetadata?: {
+    registrationNumber: string;
+    deceasedName: string;
+    dateOfDeath: string;
+    stateOrMunicipality: string;
+    verificationUrl?: string;
+    isGovDomainValid?: boolean;
+    hasDigitalSignature?: boolean;
+    signatureIntegrity?: string;
+  };
+  registryResult?: {
+    status: string;
+    mismatches: string[];
+    provider: string;
+    details?: string;
+  };
+  graceEndsAt?: string;
+  gracePeriodSeconds: number;
+  initiatedAt: string;
+  updatedAt: string;
+  executedAt?: string;
+  holdReason?: string;
+  abortReason?: string;
+  disputeReason?: string;
+  evidencePath?: string;
+  actions?: ClaimAction[];
 }
 
 export interface ClaimAction {

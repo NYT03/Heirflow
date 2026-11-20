@@ -11,6 +11,8 @@ backend/verification-gate/node_modules/
 backend/.env
 frontend/.env
 !*.example
+*gcp-key*.json
+service-account*.json
 
 # Production builds
 dist/

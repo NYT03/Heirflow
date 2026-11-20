@@ -3,6 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const {
+  COLLECTIONS,
+  initAndHydrate,
+  syncUpsert,
+  syncDelete,
+  isCloudConnected,
+} = require('./services/cloudDatabase');
 
 const DATA_FILE = path.join(__dirname, 'heirflow-data.json');
 
@@ -13,6 +20,8 @@ let tables = {
   nominees: [],
   claims: [],
   claim_actions: [],
+  gate_claims: [],
+  gate_claim_actions: [],
   audit_logs: [],
   messages: []
 };
@@ -73,6 +82,7 @@ const db = {
           };
           tables.users.push(user);
           saveData();
+          syncUpsert(COLLECTIONS.USERS, user.id, user);
           return { changes: 1, lastInsertRowid: id };
         }
 
@@ -91,6 +101,7 @@ const db = {
           };
           tables.assets.push(asset);
           saveData();
+          syncUpsert(COLLECTIONS.ASSETS, asset.id, asset);
           return { changes: 1, lastInsertRowid: id };
         }
 
@@ -110,6 +121,7 @@ const db = {
           };
           tables.nominees.push(nominee);
           saveData();
+          syncUpsert(COLLECTIONS.NOMINEES, nominee.id, nominee);
           return { changes: 1, lastInsertRowid: id };
         }
 
@@ -151,14 +163,16 @@ const db = {
         // --- AUDIT LOGS INSERT ---
         if (lower.startsWith('insert into audit_logs')) {
           const [id, user_id, action, details] = params;
-          tables.audit_logs.push({
+          const logEntry = {
             id: id || uuidv4(),
             user_id,
             action,
             details: typeof details === 'string' ? details : JSON.stringify(details || {}),
             created_at: new Date().toISOString()
-          });
+          };
+          tables.audit_logs.push(logEntry);
           saveData();
+          syncUpsert(COLLECTIONS.AUDIT_LOGS, logEntry.id, logEntry);
           return { changes: 1 };
         }
 
@@ -173,6 +187,7 @@ const db = {
             if (instructions !== undefined) asset.instructions = instructions;
             if (nominee_id !== undefined) asset.nominee_id = nominee_id;
             saveData();
+            syncUpsert(COLLECTIONS.ASSETS, asset.id, asset);
             return { changes: 1 };
           }
           return { changes: 0 };
@@ -184,6 +199,9 @@ const db = {
           const initialLen = tables.assets.length;
           tables.assets = tables.assets.filter(a => !(a.id === id && a.user_id === user_id));
           saveData();
+          if (tables.assets.length < initialLen) {
+            syncDelete(COLLECTIONS.ASSETS, id);
+          }
           return { changes: initialLen - tables.assets.length };
         }
 
@@ -198,6 +216,7 @@ const db = {
             if (relationship !== undefined) nominee.relationship = relationship;
             if (permissions !== undefined && permissions !== null) nominee.permissions = permissions;
             saveData();
+            syncUpsert(COLLECTIONS.NOMINEES, nominee.id, nominee);
             return { changes: 1 };
           }
           return { changes: 0 };
@@ -209,6 +228,9 @@ const db = {
           const initialLen = tables.nominees.length;
           tables.nominees = tables.nominees.filter(n => !(n.id === id && n.user_id === user_id));
           saveData();
+          if (tables.nominees.length < initialLen) {
+            syncDelete(COLLECTIONS.NOMINEES, id);
+          }
           return { changes: initialLen - tables.nominees.length };
         }
 
@@ -322,7 +344,19 @@ const db = {
           return claim ? { ...claim } : undefined;
         }
 
-        // Active claims count
+        // Active claims count (verification gate)
+        if (lower.includes('count(*) as count from gate_claims')) {
+          const [id1, id2] = params;
+          const active = tables.gate_claims.filter(c =>
+            (c.claimant_id === id1 || c.deceased_user_id === id2) &&
+            c.status !== 'EXECUTED' &&
+            c.status !== 'REJECTED' &&
+            c.status !== 'ABORTED_LIVENESS'
+          );
+          return { count: active.length };
+        }
+
+        // Active claims count (legacy)
         if (lower.includes('count(*) as count from claims')) {
           const [id1, id2] = params;
           const active = tables.claims.filter(c =>
@@ -412,7 +446,74 @@ const db = {
         return [];
       }
     };
-  }
+  },
+
+  // Direct persistence helpers for the Verification Gate module
+  gate: {
+    saveClaim: (record) => {
+      const idx = tables.gate_claims.findIndex(c => c.claim_id === record.claim_id);
+      if (idx >= 0) {
+        tables.gate_claims[idx] = { ...tables.gate_claims[idx], ...record };
+      } else {
+        tables.gate_claims.push(record);
+      }
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIMS, record.claim_id, tables.gate_claims.find(c => c.claim_id === record.claim_id));
+    },
+    getClaim: (claimId) => {
+      return tables.gate_claims.find(c => c.claim_id === claimId);
+    },
+    listClaims: () => {
+      return tables.gate_claims
+        .map(c => {
+          const deceased = tables.users.find(u => u.id === c.deceased_user_id);
+          return {
+            ...c,
+            deceased_name: deceased ? deceased.name : 'Unknown',
+            deceased_email: deceased ? deceased.email : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.initiated_at) - new Date(a.initiated_at));
+    },
+    clearClaims: () => {
+      tables.gate_claim_actions = [];
+      tables.gate_claims = [];
+      saveData();
+    },
+    insertAction: (action) => {
+      const entry = {
+        ...action,
+        executed_at: action.executed_at || new Date().toISOString()
+      };
+      tables.gate_claim_actions.push(entry);
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIM_ACTIONS, entry.id, entry);
+    },
+    listActions: (claimId) => {
+      return tables.gate_claim_actions
+        .filter(a => a.claim_id === claimId)
+        .map(a => {
+          const asset = tables.assets.find(as => as.id === a.asset_id);
+          return {
+            ...a,
+            asset_name: asset ? asset.name : 'Unknown Asset',
+            asset_type: asset ? asset.type : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.executed_at) - new Date(a.executed_at));
+    },
+    findActiveClaim: (claimantId, deceasedUserId) => {
+      return tables.gate_claims.find(
+        c =>
+          c.claimant_id === claimantId &&
+          c.deceased_user_id === deceasedUserId &&
+          !['REJECTED', 'EXECUTED', 'ABORTED_LIVENESS'].includes(c.status)
+      );
+    }
+  },
+
+  initCloud: () => initAndHydrate(tables),
+  isCloudConnected
 };
 
 // Seed demo data if users empty
