@@ -1,0 +1,110 @@
+{
+  "users": [
+    {
+      "id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "name": "John Doe",
+      "email": "john@demo.com",
+      "password_hash": "$2b$10$ep13ZqeQXjLdhh0lsrCCK.ts039Pmu8KkwcTcooDseaM4z5BgwH8S",
+      "phone": "+1-555-0101",
+      "kyc_status": "verified",
+      "created_at": "2026-11-20T08:14:58.659Z"
+    },
+    {
+      "id": "09b47bf7-3c5a-4eab-ba7c-24fd9545b9d9",
+      "name": "Jane Smith",
+      "email": "jane@demo.com",
+      "password_hash": "$2b$10$CSz7xqcLhPY8TSArTg88t.l11pQ1XrXGQSObRkdOHnUduBPv634Vm",
+      "phone": "+1-555-0202",
+      "kyc_status": "pending",
+      "created_at": "2026-11-20T08:14:58.661Z"
+    }
+  ],
+  "assets": [
+    {
+      "id": "e1dfabf5-6ad0-4e5e-9498-10e05a8ef1d4",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "type": "bank",
+      "name": "Chase Checking Account",
+      "details": "{\"bank\":\"Chase Bank\",\"account_number\":\"****1234\",\"routing\":\"021000021\"}",
+      "instructions": "Transfer to nominee upon verified claim. Contact Chase estate services at 1-800-935-9935.",
+      "nominee_id": "09b47bf7-3c5a-4eab-ba7c-24fd9545b9d9",
+      "created_at": "2026-11-20T08:14:58.661Z"
+    },
+    {
+      "id": "9c265091-5444-4a8c-9cb4-101f9fa85b29",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "type": "crypto",
+      "name": "Bitcoin Wallet",
+      "details": "{\"wallet_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf\",\"exchange\":\"Coinbase\"}",
+      "instructions": "Recovery phrase stored in LastPass vault. Nominee should contact Coinbase support with death certificate.",
+      "nominee_id": "09b47bf7-3c5a-4eab-ba7c-24fd9545b9d9",
+      "created_at": "2026-11-20T08:14:58.661Z"
+    },
+    {
+      "id": "f028f333-911f-4e34-ad05-3887046306f3",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "type": "file",
+      "name": "Google Photos Primary Library & Cloud Archive",
+      "details": "{\"account\":\"john@demo.com\",\"service\":\"Google Photos\",\"highResCount\":14250,\"sharedAlbums\":[\"Family Archive 2018-2026\",\"Vacations & Celebrations\",\"Documents & Receipts\"],\"googleOneStorageTier\":\"100 GB Plan\"}",
+      "instructions": "Contains 10+ years of unbacked personal and family photos. Nominee should request Google Takeout or account manager transfer.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T08:16:29.037Z"
+    },
+    {
+      "id": "5ec2e75e-9129-4f3b-b908-2fbf40ae14b0",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "type": "bank",
+      "name": "Google Pay (GPay UPI)",
+      "details": "{\"upiId\":\"john@okhdfcbank\",\"secondaryUpiId\":\"john@okaxis\",\"linkedBank\":\"HDFC Bank Ltd\",\"accountType\":\"Savings Account\",\"registeredEmail\":\"john@demo.com\",\"verificationSource\":\"Google Pay Registered Profile\"}",
+      "instructions": "Contact HDFC Bank estate nodal officer with death certificate and probate/succession certificate to claim balance.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T08:16:29.037Z"
+    }
+  ],
+  "nominees": [
+    {
+      "id": "6b6f317e-9630-4e7c-a7a4-ae2a532462fa",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "name": "Jane Smith",
+      "email": "jane@demo.com",
+      "phone": "+1-555-0202",
+      "relationship": "spouse",
+      "key_share": "HEIRFLOW-SHARE-73AA27D7F2B241189899BD55",
+      "permissions": "{\"can_view_assets\":true,\"can_initiate_claims\":true,\"can_access_files\":true}",
+      "created_at": "2026-11-20T08:14:58.661Z"
+    }
+  ],
+  "claims": [],
+  "claim_actions": [],
+  "audit_logs": [
+    {
+      "id": "a266f125-6646-491e-8119-890b51cc0431",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "action": "SEED_DATA_CREATED",
+      "details": "{\"message\":\"Demo data seeded\"}",
+      "created_at": "2026-11-20T08:14:58.661Z"
+    },
+    {
+      "id": "5f234016-d9fb-42e5-bf0a-4006c0a00bf1",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "action": "USER_LOGIN",
+      "details": "{\"email\":\"john@demo.com\"}",
+      "created_at": "2026-11-20T08:16:29.026Z"
+    },
+    {
+      "id": "37645591-ed29-4191-bd12-b2a297412cae",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"john@demo.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T08:16:29.033Z"
+    },
+    {
+      "id": "488dddd3-6ae8-4621-8156-0dd90e2b6098",
+      "user_id": "27cbb36d-fd3b-4298-9ad1-a2a7ae4b0988",
+      "action": "ASSETS_IMPORTED_FROM_GOOGLE",
+      "details": "{\"count\":2,\"assetNames\":[\"Google Photos Primary Library & Cloud Archive\",\"Google Pay (GPay UPI)\"]}",
+      "created_at": "2026-11-20T08:16:29.038Z"
+    }
+  ],
+  "messages": []
+}

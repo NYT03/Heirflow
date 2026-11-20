@@ -1,9 +1,14 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+let GoogleGenerativeAI = null;
+try {
+  GoogleGenerativeAI = require('@google/generative-ai').GoogleGenerativeAI;
+} catch (e) {
+  // @google/generative-ai not installed, will use fallback
+}
 
 let genAI = null;
 const apiKey = process.env.GEMINI_API_KEY;
 
-if (apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.length > 10) {
+if (GoogleGenerativeAI && apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.length > 10) {
   genAI = new GoogleGenerativeAI(apiKey);
 }
 
