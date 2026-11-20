@@ -29,10 +29,10 @@ router.get('/', auth, (req, res) => {
       created_at: log.created_at
     }));
 
-    // Claims summary
+    // Claims summary (from persistent verification gate claims)
     const active_claims = db.prepare(`
-      SELECT COUNT(*) as count FROM claims
-      WHERE (claimant_id = ? OR deceased_user_id = ?) AND status NOT IN ('completed', 'rejected')
+      SELECT COUNT(*) as count FROM gate_claims
+      WHERE (claimant_id = ? OR deceased_user_id = ?) AND status NOT IN ('EXECUTED', 'REJECTED', 'ABORTED_LIVENESS')
     `).get(req.user.id, req.user.id);
 
     return res.json({

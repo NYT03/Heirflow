@@ -28,9 +28,9 @@ const Dashboard: React.FC = () => {
 
   const completeness = data?.estate_completeness ?? 0;
   const getCompletenessColor = () => {
-    if (completeness < 30) return 'from-red-500 to-orange-500';
-    if (completeness < 70) return 'from-yellow-500 to-amber-500';
-    return 'from-green-500 to-emerald-500';
+    if (completeness < 30) return 'bg-amber-400';
+    if (completeness < 70) return 'bg-zinc-200';
+    return 'bg-emerald-400';
   };
 
   const getTimeOfDay = () => {
@@ -62,31 +62,31 @@ const Dashboard: React.FC = () => {
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold text-white">
-            {getTimeOfDay()}, {user?.name?.split(' ')[0]} 👋
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+            {getTimeOfDay()}, {user?.name?.split(' ')[0]}
           </h1>
-          <p className="text-slate-400 mt-1">Here's your estate overview</p>
+          <p className="text-sm text-zinc-400 mt-1">Here is your digital estate overview</p>
         </div>
 
         {/* Estate Completeness Bar */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
+        <div className="bg-[#111114] border border-zinc-800 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-white">Estate Plan Completeness</h3>
-              <p className="text-sm text-slate-400 mt-0.5">
-                {completeness < 30 ? 'Just getting started — add some assets!' :
-                  completeness < 70 ? 'Good progress — keep going!' :
-                    completeness < 100 ? 'Almost there — finalize your plan!' :
-                      'Your estate plan is complete! 🎉'}
+              <h3 className="font-semibold text-zinc-100">Estate Plan Completeness</h3>
+              <p className="text-sm text-zinc-400 mt-0.5">
+                {completeness < 30 ? 'Just getting started — add some assets.' :
+                  completeness < 70 ? 'Good progress — keep going.' :
+                    completeness < 100 ? 'Almost there — finalize your plan.' :
+                      'Your estate plan is complete.'}
               </p>
             </div>
-            <span className={`text-2xl font-bold bg-gradient-to-r ${getCompletenessColor()} bg-clip-text text-transparent`}>
+            <span className="text-2xl font-semibold text-zinc-100">
               {completeness}%
             </span>
           </div>
-          <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
             <div
-              className={`h-full bg-gradient-to-r ${getCompletenessColor()} rounded-full transition-all duration-1000`}
+              className={`h-full ${getCompletenessColor()} rounded-full transition-all duration-700`}
               style={{ width: `${completeness}%` }}
             />
           </div>

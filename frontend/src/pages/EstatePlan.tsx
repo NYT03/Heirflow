@@ -89,9 +89,9 @@ const EstatePlan: React.FC = () => {
             <button
               onClick={() => setShowConfirm(true)}
               disabled={!isComplete}
-              className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-green-900/40"
+              className="flex items-center gap-2 bg-zinc-100 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors"
             >
-              <Zap className="w-5 h-5" />
+              <Zap className="w-4 h-4" />
               Activate Estate Plan
             </button>
           ) : (
@@ -115,9 +115,9 @@ const EstatePlan: React.FC = () => {
             <h2 className="text-lg font-semibold text-white">Completion Progress</h2>
             <span className="text-2xl font-bold text-indigo-400">{Math.round((completeness / totalSteps) * 100)}%</span>
           </div>
-          <div className="h-3 bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden mb-6">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000"
+              className="h-full bg-zinc-100 rounded-full transition-all duration-700"
               style={{ width: `${(completeness / totalSteps) * 100}%` }}
             />
           </div>
@@ -205,8 +205,8 @@ const EstatePlan: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 hover:border-slate-500 font-medium transition-colors">Cancel</button>
-              <button onClick={handleActivate} disabled={activating} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 text-white font-medium transition-all">
-                {activating ? 'Activating...' : '✓ Activate Now'}
+              <button onClick={handleActivate} disabled={activating} className="flex-1 py-2.5 rounded-lg bg-zinc-100 hover:bg-white disabled:opacity-50 text-zinc-950 font-semibold text-sm transition-colors">
+                {activating ? 'Activating...' : 'Activate Now'}
               </button>
             </div>
           </div>

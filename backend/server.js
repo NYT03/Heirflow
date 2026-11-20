@@ -20,34 +20,20 @@ require('./db');
 const authRoutes = require('./routes/auth');
 const assetRoutes = require('./routes/assets');
 const nomineeRoutes = require('./routes/nominees');
-const claimRoutes = require('./routes/claims');
 const dashboardRoutes = require('./routes/dashboard');
 const geminiRoutes = require('./routes/gemini');
 const storageRoutes = require('./routes/storage');
-
-// Nominee Death Verification & Quorum Gate Module
-const {
-  ClaimVerificationOrchestrator,
-  createVerificationRouter,
-  MockRegistryVerifier,
-  OfficialPortalVerifier,
-} = require('./verification-gate/dist/index.js');
-
-const verificationOrchestrator = new ClaimVerificationOrchestrator(
-  process.env.CRS_API_KEY
-    ? new OfficialPortalVerifier({ apiKey: process.env.CRS_API_KEY })
-    : new MockRegistryVerifier()
-);
-const verificationRoutes = createVerificationRouter(verificationOrchestrator);
+const verificationRoutes = require('./routes/verification');
+const aaRoutes = require('./routes/accountAggregator');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/nominees', nomineeRoutes);
-app.use('/api/claims', claimRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/storage', storageRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/aa', aaRoutes);
 
 // Health check endpoint (for Cloud Run probes and monitoring)
 app.get('/api/health', (req, res) => {

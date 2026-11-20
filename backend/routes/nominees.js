@@ -3,13 +3,38 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { sendNomineeAddedEmail } = require('../services/emailService');
 
-// GET /api/nominees
+// GET /api/nominees/assigned-to-me — key shares assigned to the logged-in user as a nominee
+router.get('/assigned-to-me', auth, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT n.*, u.name as owner_name, u.email as owner_email
+      FROM nominees n
+      JOIN users u ON n.user_id = u.id
+      WHERE LOWER(n.email) = LOWER(?)
+      ORDER BY n.created_at DESC
+    `).all(req.user.email);
+
+    const parsed = rows.map(n => ({
+      ...n,
+      key_status: n.key_status || (n.key_share ? 'ACTIVE' : 'DESTROYED'),
+      permissions: n.permissions ? JSON.parse(n.permissions) : {}
+    }));
+
+    return res.json({ success: true, data: parsed });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/nominees — nominees created by the logged-in estate owner
 router.get('/', auth, (req, res) => {
   try {
     const nominees = db.prepare('SELECT * FROM nominees WHERE user_id = ? ORDER BY created_at DESC').all(req.user.id);
     const parsed = nominees.map(n => ({
       ...n,
+      key_status: n.key_status || (n.key_share ? 'ACTIVE' : 'DESTROYED'),
       permissions: n.permissions ? JSON.parse(n.permissions) : {}
     }));
     return res.json({ success: true, data: parsed });
@@ -19,7 +44,7 @@ router.get('/', auth, (req, res) => {
 });
 
 // POST /api/nominees
-router.post('/', auth, (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const { name, email, phone, relationship, permissions } = req.body;
     if (!name || !email) {
@@ -27,11 +52,10 @@ router.post('/', auth, (req, res) => {
     }
 
     const id = uuidv4();
-    // Generate a mock Shamir-style key share
     const shareRaw = uuidv4().split('-').join('').toUpperCase();
     const key_share = `HEIRFLOW-SHARE-${shareRaw.substring(0, 8)}-${shareRaw.substring(8, 16)}-${shareRaw.substring(16, 24)}`;
 
-    db.prepare(`INSERT INTO nominees (id, user_id, name, email, phone, relationship, key_share, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    db.prepare(`INSERT INTO nominees (id, user_id, name, email, phone, relationship, key_share, permissions, key_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')`).run(
       id, req.user.id, name, email,
       phone || null, relationship || null,
       key_share,
@@ -42,8 +66,20 @@ router.post('/', auth, (req, res) => {
       uuidv4(), req.user.id, 'NOMINEE_ADDED', JSON.stringify({ nominee_id: id, name, email })
     );
 
+    // Send email notification to the newly added nominee
+    const emailResult = await sendNomineeAddedEmail({
+      nomineeName: name,
+      nomineeEmail: email,
+      ownerName: req.user.name,
+      ownerEmail: req.user.email,
+      relationship
+    });
+
     const nominee = db.prepare('SELECT * FROM nominees WHERE id = ?').get(id);
-    return res.status(201).json({ success: true, data: { ...nominee, permissions: JSON.parse(nominee.permissions) } });
+    return res.status(201).json({
+      success: true,
+      data: { ...nominee, permissions: JSON.parse(nominee.permissions), email_notification: emailResult }
+    });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }

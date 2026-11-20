@@ -58,6 +58,88 @@ router.post('/', auth, (req, res) => {
   }
 });
 
+// POST /api/assets/import-passwords — Bulk import client-encrypted Chrome Saved Passwords
+router.post('/import-passwords', auth, (req, res) => {
+  try {
+    const { entries, nominee_id } = req.body;
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return res.status(400).json({ success: false, error: 'entries array is required' });
+    }
+
+    const validTypes = ['bank', 'crypto', 'subscription', 'file', 'property', 'social'];
+    const existing = db.prepare('SELECT name, details FROM assets WHERE user_id = ?').all(req.user.id);
+    const existingKeys = new Set(
+      existing.map((a) => {
+        let username = '';
+        try {
+          username = JSON.parse(a.details || '{}').username || '';
+        } catch {}
+        return `${a.name.toLowerCase()}::${String(username).toLowerCase()}`;
+      })
+    );
+
+    const insertStmt = db.prepare(
+      `INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    );
+
+    const imported = [];
+    let skippedCount = 0;
+
+    const runImport = db.transaction(() => {
+      for (const entry of entries) {
+        if (!entry || !entry.name) {
+          skippedCount++;
+          continue;
+        }
+        const assetType = validTypes.includes(entry.type) ? entry.type : 'subscription';
+        const username = entry.details?.username || '';
+        const dedupeKey = `${String(entry.name).toLowerCase()}::${String(username).toLowerCase()}`;
+
+        if (existingKeys.has(dedupeKey)) {
+          skippedCount++;
+          continue;
+        }
+        existingKeys.add(dedupeKey);
+
+        const id = uuidv4();
+        const detailsJson = JSON.stringify(entry.details || {});
+        const instructions = entry.instructions || 'transfer';
+        const targetNominee = entry.nominee_id || nominee_id || null;
+
+        insertStmt.run(id, req.user.id, assetType, entry.name, detailsJson, instructions, targetNominee);
+        imported.push({
+          id,
+          type: assetType,
+          name: entry.name,
+          details: entry.details || {},
+          instructions,
+          nominee_id: targetNominee,
+        });
+      }
+    });
+
+    runImport();
+
+    db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
+      uuidv4(),
+      req.user.id,
+      'CHROME_PASSWORDS_IMPORTED',
+      JSON.stringify({ importedCount: imported.length, skippedCount, nominee_id: nominee_id || null })
+    );
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        importedCount: imported.length,
+        skippedCount,
+        assets: imported,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // PUT /api/assets/:id
 router.put('/:id', auth, (req, res) => {
   try {

@@ -88,7 +88,63 @@ db.exec(`
     FOREIGN KEY (claim_id) REFERENCES claims(id),
     FOREIGN KEY (sender_id) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS gate_claims (
+    claim_id TEXT PRIMARY KEY,
+    deceased_user_id TEXT NOT NULL,
+    claimant_id TEXT,
+    status TEXT NOT NULL,
+    evidence_path TEXT,
+    state_json TEXT NOT NULL,
+    grace_ends_at DATETIME,
+    initiated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (deceased_user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS gate_claim_actions (
+    id TEXT PRIMARY KEY,
+    claim_id TEXT NOT NULL,
+    asset_id TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    encrypted_payload TEXT,
+    contract_address TEXT,
+    tx_hash TEXT,
+    result_notes TEXT,
+    executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (claim_id) REFERENCES gate_claims(claim_id),
+    FOREIGN KEY (asset_id) REFERENCES assets(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS blockchain_ledger (
+    block_index INTEGER PRIMARY KEY,
+    timestamp TEXT NOT NULL,
+    claim_id TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    contract_address TEXT NOT NULL,
+    data_hash TEXT NOT NULL,
+    previous_hash TEXT NOT NULL,
+    block_hash TEXT NOT NULL,
+    tx_hash TEXT NOT NULL,
+    metadata_json TEXT DEFAULT '{}'
+  );
+
+  CREATE TABLE IF NOT EXISTS email_outbox (
+    id TEXT PRIMARY KEY,
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    category TEXT,
+    preview TEXT,
+    delivery_status TEXT,
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
+
+// Safe migrations for existing heirflow.db
+try { db.exec(`ALTER TABLE nominees ADD COLUMN key_status TEXT DEFAULT 'ACTIVE'`); } catch {}
+try { db.exec(`ALTER TABLE nominees ADD COLUMN key_destroyed_at DATETIME`); } catch {}
 
 // Seed demo data if users table is empty
 function seedDemoData() {
@@ -143,6 +199,138 @@ function seedDemoData() {
 }
 
 seedDemoData();
+
+// Helper namespaces backed by SQLite for Verification Gate, Blockchain Ledger, and Email Outbox
+db.gate = {
+  saveClaim: (record) => {
+    db.prepare(`
+      INSERT INTO gate_claims (claim_id, deceased_user_id, claimant_id, status, evidence_path, state_json, grace_ends_at, initiated_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(claim_id) DO UPDATE SET
+        status = excluded.status,
+        evidence_path = COALESCE(excluded.evidence_path, gate_claims.evidence_path),
+        state_json = excluded.state_json,
+        grace_ends_at = excluded.grace_ends_at,
+        updated_at = excluded.updated_at
+    `).run(
+      record.claim_id,
+      record.deceased_user_id,
+      record.claimant_id || null,
+      record.status,
+      record.evidence_path || null,
+      record.state_json,
+      record.grace_ends_at || null,
+      record.initiated_at,
+      record.updated_at
+    );
+  },
+  getClaim: (claimId) => db.prepare('SELECT * FROM gate_claims WHERE claim_id = ?').get(claimId),
+  listClaims: () => db.prepare(`
+    SELECT gc.*, u.name as deceased_name, u.email as deceased_email
+    FROM gate_claims gc
+    JOIN users u ON gc.deceased_user_id = u.id
+    ORDER BY gc.initiated_at DESC
+  `).all(),
+  clearClaims: () => {
+    db.prepare('DELETE FROM gate_claim_actions').run();
+    db.prepare('DELETE FROM gate_claims').run();
+  },
+  insertAction: (action) => {
+    db.prepare(`
+      INSERT INTO gate_claim_actions (id, claim_id, asset_id, action_type, status, encrypted_payload, contract_address, tx_hash, result_notes, executed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      action.id,
+      action.claim_id,
+      action.asset_id,
+      action.action_type,
+      action.status || 'completed',
+      action.encrypted_payload || null,
+      action.contract_address || null,
+      action.tx_hash || null,
+      action.result_notes || null,
+      action.executed_at || new Date().toISOString()
+    );
+  },
+  listActions: (claimId) => db.prepare(`
+    SELECT gca.*, a.name as asset_name, a.type as asset_type
+    FROM gate_claim_actions gca
+    JOIN assets a ON gca.asset_id = a.id
+    WHERE gca.claim_id = ?
+    ORDER BY gca.executed_at DESC
+  `).all(claimId),
+  findActiveClaimByDeceased: (deceasedUserId) => db.prepare(`
+    SELECT * FROM gate_claims
+    WHERE deceased_user_id = ? AND status NOT IN ('REJECTED', 'EXECUTED', 'ABORTED_LIVENESS')
+    LIMIT 1
+  `).get(deceasedUserId),
+  destroyNomineeKeys: (deceasedUserId) => {
+    const destroyedAt = new Date().toISOString();
+    const res = db.prepare(`
+      UPDATE nominees
+      SET key_share = NULL, key_status = 'DESTROYED', key_destroyed_at = ?
+      WHERE user_id = ?
+    `).run(destroyedAt, deceasedUserId);
+    return { destroyedCount: res.changes, destroyedAt };
+  }
+};
+
+db.emailOutbox = {
+  save: (entry) => {
+    db.prepare(`
+      INSERT INTO email_outbox (id, recipient, subject, category, preview, delivery_status, sent_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(entry.id, entry.to, entry.subject, entry.category || 'GENERAL', entry.preview || '', entry.delivery_status || 'logged_local', entry.sent_at);
+  },
+  list: () => db.prepare('SELECT * FROM email_outbox ORDER BY sent_at DESC LIMIT 50').all()
+};
+
+db.blockchain = {
+  getBlocks: () => db.prepare('SELECT * FROM blockchain_ledger ORDER BY block_index ASC').all().map(r => ({
+    index: r.block_index,
+    timestamp: r.timestamp,
+    claimId: r.claim_id,
+    stage: r.stage,
+    actor: r.actor,
+    contractAddress: r.contract_address,
+    dataHash: r.data_hash,
+    previousHash: r.previous_hash,
+    blockHash: r.block_hash,
+    txHash: r.tx_hash,
+    metadata: r.metadata_json ? JSON.parse(r.metadata_json) : {}
+  })),
+  getBlocksForClaim: (claimId) => db.prepare('SELECT * FROM blockchain_ledger WHERE claim_id = ? ORDER BY block_index ASC').all(claimId).map(r => ({
+    index: r.block_index,
+    timestamp: r.timestamp,
+    claimId: r.claim_id,
+    stage: r.stage,
+    actor: r.actor,
+    contractAddress: r.contract_address,
+    dataHash: r.data_hash,
+    previousHash: r.previous_hash,
+    blockHash: r.block_hash,
+    txHash: r.tx_hash,
+    metadata: r.metadata_json ? JSON.parse(r.metadata_json) : {}
+  })),
+  appendBlock: (block) => {
+    db.prepare(`
+      INSERT INTO blockchain_ledger (block_index, timestamp, claim_id, stage, actor, contract_address, data_hash, previous_hash, block_hash, tx_hash, metadata_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      block.index,
+      block.timestamp,
+      block.claimId,
+      block.stage,
+      block.actor,
+      block.contractAddress,
+      block.dataHash,
+      block.previousHash,
+      block.blockHash,
+      block.txHash,
+      JSON.stringify(block.metadata || {})
+    );
+  }
+};
 
 module.exports = db;
 
