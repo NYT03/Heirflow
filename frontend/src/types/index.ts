@@ -121,8 +121,6 @@ export interface ClaimAction {
   tx_hash?: string;
   result_notes?: string;
   executed_at?: string;
-  asset_name?: string;
-  asset_type?: string;
 }
 
 export interface DashboardData {

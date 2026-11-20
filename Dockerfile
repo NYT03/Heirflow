@@ -24,7 +24,7 @@ COPY backend/verification-gate/ ./
 RUN npm run build
 
 # --- Stage 3: Production Server ---
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
