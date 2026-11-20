@@ -23,7 +23,9 @@ let tables = {
   gate_claims: [],
   gate_claim_actions: [],
   audit_logs: [],
-  messages: []
+  messages: [],
+  blockchain_ledger: [],
+  email_outbox: []
 };
 
 // Load saved data if file exists
@@ -509,6 +511,67 @@ const db = {
           c.deceased_user_id === deceasedUserId &&
           !['REJECTED', 'EXECUTED', 'ABORTED_LIVENESS'].includes(c.status)
       );
+    },
+    findActiveClaimByDeceased: (deceasedUserId) => {
+      return tables.gate_claims.find(
+        c =>
+          c.deceased_user_id === deceasedUserId &&
+          !['REJECTED', 'EXECUTED', 'ABORTED_LIVENESS'].includes(c.status)
+      );
+    },
+    destroyNomineeKeys: (deceasedUserId) => {
+      const destroyedAt = new Date().toISOString();
+      let destroyedCount = 0;
+      for (const n of tables.nominees) {
+        if (n.user_id === deceasedUserId) {
+          n.key_share = null;
+          n.key_status = 'DESTROYED';
+          n.key_destroyed_at = destroyedAt;
+          destroyedCount++;
+          syncUpsert(COLLECTIONS.NOMINEES, n.id, n);
+        }
+      }
+      saveData();
+      return { destroyedCount, destroyedAt };
+    }
+  },
+
+  emailOutbox: {
+    save: (entry) => {
+      const record = {
+        id: entry.id,
+        recipient: entry.to,
+        subject: entry.subject,
+        category: entry.category || 'GENERAL',
+        preview: entry.preview || '',
+        delivery_status: entry.delivery_status || 'logged_local',
+        sent_at: entry.sent_at || new Date().toISOString()
+      };
+      tables.email_outbox.push(record);
+      saveData();
+    },
+    list: () => [...tables.email_outbox].sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at)).slice(0, 50)
+  },
+
+  blockchain: {
+    getBlocks: () => [...tables.blockchain_ledger].sort((a, b) => a.index - b.index),
+    getBlocksForClaim: (claimId) =>
+      tables.blockchain_ledger.filter(b => b.claimId === claimId).sort((a, b) => a.index - b.index),
+    appendBlock: (block) => {
+      tables.blockchain_ledger.push({
+        index: block.index,
+        timestamp: block.timestamp,
+        claimId: block.claimId,
+        stage: block.stage,
+        actor: block.actor,
+        contractAddress: block.contractAddress,
+        dataHash: block.dataHash,
+        previousHash: block.previousHash,
+        blockHash: block.blockHash,
+        txHash: block.txHash,
+        metadata: block.metadata || {}
+      });
+      saveData();
     }
   },
 

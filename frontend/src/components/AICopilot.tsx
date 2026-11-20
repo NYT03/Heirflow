@@ -56,28 +56,29 @@ const AICopilot: React.FC = () => {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className={`fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-indigo-900/50 hover:scale-110 transition-all z-40 ${open ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-6 right-6 w-12 h-12 bg-zinc-100 hover:bg-white text-zinc-950 rounded-full flex items-center justify-center shadow-lg shadow-black/40 border border-zinc-300 transition-transform hover:scale-105 z-40 ${open ? 'hidden' : 'flex'}`}
+        title="HeirFlow Copilot"
       >
-        <MessageSquare className="w-6 h-6 text-white" />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900" />
+        <MessageSquare className="w-5 h-5" />
+        <span className="absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#09090B]" />
       </button>
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-6 right-6 w-96 h-[560px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 flex flex-col z-40 overflow-hidden">
+        <div className="fixed bottom-6 right-6 w-96 h-[540px] bg-[#111114] border border-zinc-800 rounded-2xl shadow-2xl shadow-black/60 flex flex-col z-40 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 flex items-center justify-between">
+          <div className="bg-[#0C0C0F] border-b border-zinc-800 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-zinc-200" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm">AI Copilot</p>
-                <p className="text-xs text-indigo-200">HeirFlow Estate Advisor</p>
+                <p className="font-semibold text-zinc-100 text-sm">HeirFlow Copilot</p>
+                <p className="text-xs text-zinc-500">Estate Planning Advisor</p>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white">
-              <X className="w-5 h-5" />
+            <button onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-100">
+              <X className="w-4 h-4" />
             </button>
           </div>
 
@@ -86,14 +87,14 @@ const AICopilot: React.FC = () => {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Bot className="w-3.5 h-3.5 text-zinc-300" />
                   </div>
                 )}
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-slate-700 text-slate-200 rounded-tl-sm'
+                    ? 'bg-zinc-100 text-zinc-950'
+                    : 'bg-zinc-900 border border-zinc-800 text-zinc-200'
                 }`}>
                   {msg.content}
                 </div>
@@ -101,12 +102,12 @@ const AICopilot: React.FC = () => {
             ))}
             {loading && (
               <div className="flex gap-2">
-                <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-3.5 h-3.5 text-zinc-300" />
                 </div>
-                <div className="bg-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-1">
                   {[0, 1, 2].map(i => (
-                    <span key={i} className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    <span key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
               </div>

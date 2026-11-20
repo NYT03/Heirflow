@@ -1,73 +1,112 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { toast.error('Please fill in all fields'); return; }
+    setErrorMsg('');
+    if (!email || !password) {
+      const msg = 'Please fill in all fields';
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
+    }
     setLoading(true);
     try {
       await login(email, password);
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.error || err.message || 'Login failed');
+      const msg = err.response?.data?.error || err.message || 'Invalid email or password';
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-900/50">
-            <Lock className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">HeirFlow</h1>
-          <p className="text-slate-400 mt-2">Sign in to your estate vault</p>
+    <div className="min-h-screen bg-[#09090B] text-zinc-100 grid lg:grid-cols-2">
+      {/* Left Editorial Panel */}
+      <div className="hidden lg:flex relative flex-col justify-between p-12 border-r border-zinc-900 overflow-hidden bg-[#0C0C0F]">
+        <img
+          src="/images/auth-minimal.jpg"
+          alt="Minimalist architectural geometry"
+          className="absolute inset-0 w-full h-full object-cover opacity-35"
+        />
+        <div className="relative z-10">
+          <Link to="/">
+            <Logo size="md" />
+          </Link>
         </div>
+        <div className="relative z-10 max-w-md space-y-3">
+          <p className="text-xl font-medium text-zinc-100 leading-snug">
+            “Clarity for the people you trust, secured until the moment they need it.”
+          </p>
+          <p className="text-xs text-zinc-400">Zero-knowledge encrypted estate vault</p>
+        </div>
+      </div>
 
-        <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-8 backdrop-blur-sm shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Right Form */}
+      <div className="flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-sm space-y-7">
+          <div className="lg:hidden">
+            <Link to="/">
+              <Logo size="md" />
+            </Link>
+          </div>
+
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Sign in</h1>
+            <p className="text-sm text-zinc-400 mt-1">Access your private digital estate vault</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {errorMsg && (
+              <div className="flex items-center gap-2.5 bg-red-950/50 border border-red-800/70 text-red-300 text-xs px-3.5 py-2.5 rounded-lg">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                  className="w-full bg-[#111114] border border-zinc-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-12 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                  className="w-full bg-[#111114] border border-zinc-800 rounded-lg pl-9 pr-10 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
-                  {showPw ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200">
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -75,35 +114,18 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-indigo-900/40"
+              className="w-full bg-zinc-100 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 py-2.5 rounded-lg text-sm font-semibold transition-colors mt-2"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
-                </span>
-              ) : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-slate-400 text-sm">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
-                Create one free
-              </Link>
-            </p>
-          </div>
-
-          <div className="mt-4 p-3 bg-indigo-900/20 border border-indigo-700/30 rounded-xl">
-            <p className="text-xs text-indigo-300 text-center">🔒 256-bit encryption · Your data never leaves your control</p>
-          </div>
-        </div>
-
-        <div className="text-center mt-6">
-          <Link to="/" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
-            ← Back to HeirFlow
-          </Link>
+          <p className="text-zinc-500 text-xs text-center">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-zinc-200 hover:text-white font-medium underline underline-offset-4">
+              Create one
+            </Link>
+          </p>
         </div>
       </div>
     </div>
@@ -111,4 +133,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-
