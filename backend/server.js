@@ -80,8 +80,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 HeirFlow running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 HeirFlow running on http://0.0.0.0:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
   console.log(`☁️ Cloud Run environment: ${process.env.K_SERVICE ? 'ACTIVE' : 'LOCAL'}`);
   console.log(`🗄️ Google Cloud Storage: ${process.env.GCS_BUCKET_NAME || 'local fallback'}`);
