@@ -27,7 +27,7 @@ gcloud config set project "$PROJECT_ID"
 echo "[1/4] Enabling required Google Cloud APIs..."
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com storage.googleapis.com firestore.googleapis.com
 
-ENV_VARS="NODE_ENV=production,PORT=8080,GCP_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE_ID=$FIRESTORE_DB"
+ENV_VARS="NODE_ENV=production,GCP_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE_ID=$FIRESTORE_DB"
 
 if [ -n "$GEMINI_KEY" ]; then
     ENV_VARS="$ENV_VARS,GEMINI_API_KEY=$GEMINI_KEY"
