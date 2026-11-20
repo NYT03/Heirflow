@@ -4,7 +4,7 @@
 # ==========================================
 
 # --- Stage 1: Build Frontend (Vite) ---
-FROM node:22-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
@@ -14,7 +14,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # --- Stage 2: Build Verification Gate (TypeScript) ---
-FROM node:22-alpine AS gate-builder
+FROM node:20-alpine AS gate-builder
 WORKDIR /app/backend/verification-gate
 
 COPY backend/verification-gate/package*.json ./
@@ -24,7 +24,7 @@ COPY backend/verification-gate/ ./
 RUN npm run build
 
 # --- Stage 3: Production Server ---
-FROM node:22-slim AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

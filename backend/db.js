@@ -1,157 +1,524 @@
 require('dotenv').config();
-const Database = require('better-sqlite3');
-const bcrypt = require('bcryptjs');
+const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+const {
+  COLLECTIONS,
+  initAndHydrate,
+  syncUpsert,
+  syncDelete,
+  isCloudConnected,
+} = require('./services/cloudDatabase');
 
-const db = new Database(path.join(__dirname, 'heirflow.db'));
+const DATA_FILE = path.join(__dirname, 'heirflow-data.json');
 
-// Enable WAL mode for better performance
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// In-memory data store with JSON file persistence
+let tables = {
+  users: [],
+  assets: [],
+  nominees: [],
+  claims: [],
+  claim_actions: [],
+  gate_claims: [],
+  gate_claim_actions: [],
+  audit_logs: [],
+  messages: []
+};
 
-// Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    phone TEXT,
-    kyc_status TEXT DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+// Load saved data if file exists
+function loadData() {
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const content = fs.readFileSync(DATA_FILE, 'utf8');
+      const loaded = JSON.parse(content);
+      tables = { ...tables, ...loaded };
+    } catch (e) {
+      console.warn('⚠️ Could not parse heirflow-data.json, starting fresh');
+    }
+  }
+}
 
-  CREATE TABLE IF NOT EXISTS assets (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    name TEXT NOT NULL,
-    details TEXT DEFAULT '{}',
-    instructions TEXT,
-    nominee_id TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+function saveData() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(tables, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('⚠️ Could not persist to heirflow-data.json:', e.message);
+  }
+}
 
-  CREATE TABLE IF NOT EXISTS nominees (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT,
-    relationship TEXT,
-    key_share TEXT,
-    permissions TEXT DEFAULT '{}',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+loadData();
 
-  CREATE TABLE IF NOT EXISTS claims (
-    id TEXT PRIMARY KEY,
-    claimant_id TEXT NOT NULL,
-    deceased_user_id TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    evidence_path TEXT,
-    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    grace_until DATETIME,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (claimant_id) REFERENCES users(id),
-    FOREIGN KEY (deceased_user_id) REFERENCES users(id)
-  );
+// Universal pure-JS SQLite interface emulator
+const db = {
+  pragma: () => {},
+  exec: () => {},
+  
+  transaction: (fn) => {
+    return (...args) => {
+      const result = fn(...args);
+      saveData();
+      return result;
+    };
+  },
 
-  CREATE TABLE IF NOT EXISTS claim_actions (
-    id TEXT PRIMARY KEY,
-    claim_id TEXT NOT NULL,
-    asset_id TEXT NOT NULL,
-    action_type TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    result_notes TEXT,
-    executed_at DATETIME,
-    FOREIGN KEY (claim_id) REFERENCES claims(id),
-    FOREIGN KEY (asset_id) REFERENCES assets(id)
-  );
+  prepare: (sql) => {
+    const rawSql = sql.replace(/\s+/g, ' ').trim();
+    const lower = rawSql.toLowerCase();
 
-  CREATE TABLE IF NOT EXISTS audit_logs (
-    id TEXT PRIMARY KEY,
-    user_id TEXT,
-    action TEXT NOT NULL,
-    details TEXT DEFAULT '{}',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+    return {
+      run: (...params) => {
+        // --- USERS INSERT ---
+        if (lower.startsWith('insert into users')) {
+          const [id, name, email, password_hash, phone, kyc_status] = params;
+          const user = {
+            id,
+            name,
+            email,
+            password_hash,
+            phone: phone || null,
+            kyc_status: kyc_status || 'pending',
+            created_at: new Date().toISOString()
+          };
+          tables.users.push(user);
+          saveData();
+          syncUpsert(COLLECTIONS.USERS, user.id, user);
+          return { changes: 1, lastInsertRowid: id };
+        }
 
-  CREATE TABLE IF NOT EXISTS messages (
-    id TEXT PRIMARY KEY,
-    claim_id TEXT NOT NULL,
-    sender_id TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (claim_id) REFERENCES claims(id),
-    FOREIGN KEY (sender_id) REFERENCES users(id)
-  );
+        // --- ASSETS INSERT ---
+        if (lower.startsWith('insert into assets')) {
+          const [id, user_id, type, name, details, instructions, nominee_id] = params;
+          const asset = {
+            id,
+            user_id,
+            type,
+            name,
+            details: typeof details === 'string' ? details : JSON.stringify(details || {}),
+            instructions: instructions || null,
+            nominee_id: nominee_id || null,
+            created_at: new Date().toISOString()
+          };
+          tables.assets.push(asset);
+          saveData();
+          syncUpsert(COLLECTIONS.ASSETS, asset.id, asset);
+          return { changes: 1, lastInsertRowid: id };
+        }
 
-  CREATE TABLE IF NOT EXISTS gate_claims (
-    claim_id TEXT PRIMARY KEY,
-    deceased_user_id TEXT NOT NULL,
-    claimant_id TEXT,
-    status TEXT NOT NULL,
-    evidence_path TEXT,
-    state_json TEXT NOT NULL,
-    grace_ends_at DATETIME,
-    initiated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (deceased_user_id) REFERENCES users(id)
-  );
+        // --- NOMINEES INSERT ---
+        if (lower.startsWith('insert into nominees')) {
+          const [id, user_id, name, email, phone, relationship, key_share, permissions] = params;
+          const nominee = {
+            id,
+            user_id,
+            name,
+            email,
+            phone: phone || null,
+            relationship: relationship || null,
+            key_share,
+            permissions: typeof permissions === 'string' ? permissions : JSON.stringify(permissions || {}),
+            created_at: new Date().toISOString()
+          };
+          tables.nominees.push(nominee);
+          saveData();
+          syncUpsert(COLLECTIONS.NOMINEES, nominee.id, nominee);
+          return { changes: 1, lastInsertRowid: id };
+        }
 
-  CREATE TABLE IF NOT EXISTS gate_claim_actions (
-    id TEXT PRIMARY KEY,
-    claim_id TEXT NOT NULL,
-    asset_id TEXT NOT NULL,
-    action_type TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    encrypted_payload TEXT,
-    contract_address TEXT,
-    tx_hash TEXT,
-    result_notes TEXT,
-    executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (claim_id) REFERENCES gate_claims(claim_id),
-    FOREIGN KEY (asset_id) REFERENCES assets(id)
-  );
+        // --- CLAIMS INSERT ---
+        if (lower.startsWith('insert into claims')) {
+          const [id, claimant_id, deceased_user_id] = params;
+          const claim = {
+            id,
+            claimant_id,
+            deceased_user_id,
+            status: 'pending',
+            evidence_path: null,
+            submitted_at: new Date().toISOString(),
+            grace_until: null,
+            updated_at: new Date().toISOString()
+          };
+          tables.claims.push(claim);
+          saveData();
+          return { changes: 1, lastInsertRowid: id };
+        }
 
-  CREATE TABLE IF NOT EXISTS blockchain_ledger (
-    block_index INTEGER PRIMARY KEY,
-    timestamp TEXT NOT NULL,
-    claim_id TEXT NOT NULL,
-    stage TEXT NOT NULL,
-    actor TEXT NOT NULL,
-    contract_address TEXT NOT NULL,
-    data_hash TEXT NOT NULL,
-    previous_hash TEXT NOT NULL,
-    block_hash TEXT NOT NULL,
-    tx_hash TEXT NOT NULL,
-    metadata_json TEXT DEFAULT '{}'
-  );
+        // --- CLAIM ACTIONS INSERT ---
+        if (lower.startsWith('insert into claim_actions')) {
+          const [id, claim_id, asset_id, action_type, status, result_notes] = params;
+          const action = {
+            id,
+            claim_id,
+            asset_id,
+            action_type,
+            status: status || 'pending',
+            result_notes,
+            executed_at: new Date().toISOString()
+          };
+          tables.claim_actions.push(action);
+          saveData();
+          return { changes: 1, lastInsertRowid: id };
+        }
 
-  CREATE TABLE IF NOT EXISTS email_outbox (
-    id TEXT PRIMARY KEY,
-    recipient TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    category TEXT,
-    preview TEXT,
-    delivery_status TEXT,
-    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+        // --- AUDIT LOGS INSERT ---
+        if (lower.startsWith('insert into audit_logs')) {
+          const [id, user_id, action, details] = params;
+          const logEntry = {
+            id: id || uuidv4(),
+            user_id,
+            action,
+            details: typeof details === 'string' ? details : JSON.stringify(details || {}),
+            created_at: new Date().toISOString()
+          };
+          tables.audit_logs.push(logEntry);
+          saveData();
+          syncUpsert(COLLECTIONS.AUDIT_LOGS, logEntry.id, logEntry);
+          return { changes: 1 };
+        }
 
-// Safe migrations for existing heirflow.db
-try { db.exec(`ALTER TABLE nominees ADD COLUMN key_status TEXT DEFAULT 'ACTIVE'`); } catch {}
-try { db.exec(`ALTER TABLE nominees ADD COLUMN key_destroyed_at DATETIME`); } catch {}
+        // --- UPDATE ASSETS ---
+        if (lower.startsWith('update assets set')) {
+          const [type, name, details, instructions, nominee_id, id, user_id] = params;
+          const asset = tables.assets.find(a => a.id === id && a.user_id === user_id);
+          if (asset) {
+            if (type !== undefined && type !== null) asset.type = type;
+            if (name !== undefined && name !== null) asset.name = name;
+            if (details !== undefined && details !== null) asset.details = details;
+            if (instructions !== undefined) asset.instructions = instructions;
+            if (nominee_id !== undefined) asset.nominee_id = nominee_id;
+            saveData();
+            syncUpsert(COLLECTIONS.ASSETS, asset.id, asset);
+            return { changes: 1 };
+          }
+          return { changes: 0 };
+        }
 
-// Seed demo data if users table is empty
+        // --- DELETE ASSETS ---
+        if (lower.startsWith('delete from assets')) {
+          const [id, user_id] = params;
+          const initialLen = tables.assets.length;
+          tables.assets = tables.assets.filter(a => !(a.id === id && a.user_id === user_id));
+          saveData();
+          if (tables.assets.length < initialLen) {
+            syncDelete(COLLECTIONS.ASSETS, id);
+          }
+          return { changes: initialLen - tables.assets.length };
+        }
+
+        // --- UPDATE NOMINEES ---
+        if (lower.startsWith('update nominees set')) {
+          const [name, email, phone, relationship, permissions, id, user_id] = params;
+          const nominee = tables.nominees.find(n => n.id === id && n.user_id === user_id);
+          if (nominee) {
+            if (name !== undefined && name !== null) nominee.name = name;
+            if (email !== undefined && email !== null) nominee.email = email;
+            if (phone !== undefined) nominee.phone = phone;
+            if (relationship !== undefined) nominee.relationship = relationship;
+            if (permissions !== undefined && permissions !== null) nominee.permissions = permissions;
+            saveData();
+            syncUpsert(COLLECTIONS.NOMINEES, nominee.id, nominee);
+            return { changes: 1 };
+          }
+          return { changes: 0 };
+        }
+
+        // --- DELETE NOMINEES ---
+        if (lower.startsWith('delete from nominees')) {
+          const [id, user_id] = params;
+          const initialLen = tables.nominees.length;
+          tables.nominees = tables.nominees.filter(n => !(n.id === id && n.user_id === user_id));
+          saveData();
+          if (tables.nominees.length < initialLen) {
+            syncDelete(COLLECTIONS.NOMINEES, id);
+          }
+          return { changes: initialLen - tables.nominees.length };
+        }
+
+        // --- UPDATE CLAIMS REVIEW ---
+        if (lower.includes("update claims set status = 'under_review'")) {
+          const [id] = params;
+          const claim = tables.claims.find(c => c.id === id);
+          if (claim) {
+            claim.status = 'under_review';
+            claim.updated_at = new Date().toISOString();
+            saveData();
+            return { changes: 1 };
+          }
+          return { changes: 0 };
+        }
+
+        // --- UPDATE CLAIMS APPROVE (GRACE PERIOD) ---
+        if (lower.includes("update claims set status = 'grace_period'")) {
+          const [graceUntil, id] = params;
+          const claim = tables.claims.find(c => c.id === id);
+          if (claim) {
+            claim.status = 'grace_period';
+            claim.grace_until = graceUntil;
+            claim.updated_at = new Date().toISOString();
+            saveData();
+            return { changes: 1 };
+          }
+          return { changes: 0 };
+        }
+
+        // --- UPDATE CLAIMS COMPLETE ---
+        if (lower.includes("update claims set status = 'completed'")) {
+          const [id] = params;
+          const claim = tables.claims.find(c => c.id === id);
+          if (claim) {
+            claim.status = 'completed';
+            claim.updated_at = new Date().toISOString();
+            saveData();
+            return { changes: 1 };
+          }
+          return { changes: 0 };
+        }
+
+        return { changes: 0 };
+      },
+
+      get: (...params) => {
+        // COUNT users
+        if (lower.includes('count(*) as count from users')) {
+          return { count: tables.users.length };
+        }
+
+        // User by email
+        if (lower.includes('from users where email = ?')) {
+          const email = params[0];
+          const user = tables.users.find(u => u.email === email);
+          return user ? { ...user } : undefined;
+        }
+
+        // User by id
+        if (lower.includes('from users where id = ?')) {
+          const id = params[0];
+          const user = tables.users.find(u => u.id === id);
+          return user ? { ...user } : undefined;
+        }
+
+        // Asset by id and user_id
+        if (lower.includes('from assets where id = ? and user_id = ?')) {
+          const [id, user_id] = params;
+          const asset = tables.assets.find(a => a.id === id && a.user_id === user_id);
+          return asset ? { ...asset } : undefined;
+        }
+
+        // Asset by id
+        if (lower.includes('from assets where id = ?')) {
+          const [id] = params;
+          const asset = tables.assets.find(a => a.id === id);
+          return asset ? { ...asset } : undefined;
+        }
+
+        // Nominee by id and user_id
+        if (lower.includes('from nominees where id = ? and user_id = ?')) {
+          const [id, user_id] = params;
+          const nominee = tables.nominees.find(n => n.id === id && n.user_id === user_id);
+          return nominee ? { ...nominee } : undefined;
+        }
+
+        // Nominee by id
+        if (lower.includes('from nominees where id = ?')) {
+          const [id] = params;
+          const nominee = tables.nominees.find(n => n.id === id);
+          return nominee ? { ...nominee } : undefined;
+        }
+
+        // Active claim check
+        if (lower.includes('from claims where claimant_id = ? and deceased_user_id = ?')) {
+          const [claimant_id, deceased_id] = params;
+          const claim = tables.claims.find(c =>
+            c.claimant_id === claimant_id &&
+            c.deceased_user_id === deceased_id &&
+            c.status !== 'rejected' &&
+            c.status !== 'completed'
+          );
+          return claim ? { ...claim } : undefined;
+        }
+
+        // Claim by id
+        if (lower.includes('from claims where id = ?')) {
+          const [id] = params;
+          const claim = tables.claims.find(c => c.id === id);
+          return claim ? { ...claim } : undefined;
+        }
+
+        // Active claims count (verification gate)
+        if (lower.includes('count(*) as count from gate_claims')) {
+          const [id1, id2] = params;
+          const active = tables.gate_claims.filter(c =>
+            (c.claimant_id === id1 || c.deceased_user_id === id2) &&
+            c.status !== 'EXECUTED' &&
+            c.status !== 'REJECTED' &&
+            c.status !== 'ABORTED_LIVENESS'
+          );
+          return { count: active.length };
+        }
+
+        // Active claims count (legacy)
+        if (lower.includes('count(*) as count from claims')) {
+          const [id1, id2] = params;
+          const active = tables.claims.filter(c =>
+            (c.claimant_id === id1 || c.deceased_user_id === id2) &&
+            c.status !== 'completed' &&
+            c.status !== 'rejected'
+          );
+          return { count: active.length };
+        }
+
+        return undefined;
+      },
+
+      all: (...params) => {
+        // Assets with JOIN nominees
+        if (lower.includes('from assets a') && lower.includes('join nominees n')) {
+          const [userId] = params;
+          const userAssets = tables.assets.filter(a => a.user_id === userId);
+          return userAssets.map(a => {
+            const nominee = a.nominee_id ? tables.nominees.find(n => n.id === a.nominee_id) : null;
+            return {
+              ...a,
+              nominee_name: nominee ? nominee.name : null,
+              nominee_email: nominee ? nominee.email : null
+            };
+          }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        // Plain assets by user_id
+        if (lower.includes('from assets where user_id = ?')) {
+          const [userId] = params;
+          return tables.assets.filter(a => a.user_id === userId);
+        }
+
+        // Nominees by user_id
+        if (lower.includes('from nominees where user_id = ?')) {
+          const [userId] = params;
+          return tables.nominees.filter(n => n.user_id === userId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        // Claims with JOIN users claimant & deceased
+        if (lower.includes('from claims c') && lower.includes('join users claimant')) {
+          const [id1, id2] = params;
+          const userClaims = tables.claims.filter(c => c.claimant_id === id1 || c.deceased_user_id === id2);
+          return userClaims.map(c => {
+            const claimant = tables.users.find(u => u.id === c.claimant_id);
+            const deceased = tables.users.find(u => u.id === c.deceased_user_id);
+            return {
+              ...c,
+              claimant_name: claimant ? claimant.name : 'Unknown',
+              claimant_email: claimant ? claimant.email : 'Unknown',
+              deceased_name: deceased ? deceased.name : 'Unknown',
+              deceased_email: deceased ? deceased.email : 'Unknown'
+            };
+          }).sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+        }
+
+        // Claim actions with JOIN assets
+        if (lower.includes('from claim_actions ca') && lower.includes('join assets a')) {
+          const [claimId] = params;
+          const actions = tables.claim_actions.filter(ca => ca.claim_id === claimId);
+          return actions.map(ca => {
+            const asset = tables.assets.find(a => a.id === ca.asset_id);
+            return {
+              ...ca,
+              asset_name: asset ? asset.name : 'Unknown Asset',
+              asset_type: asset ? asset.type : 'Unknown'
+            };
+          }).sort((a, b) => new Date(b.executed_at) - new Date(a.executed_at));
+        }
+
+        // Plain claim actions by claim_id
+        if (lower.includes('from claim_actions where claim_id = ?')) {
+          const [claimId] = params;
+          return tables.claim_actions.filter(ca => ca.claim_id === claimId);
+        }
+
+        // Audit logs
+        if (lower.includes('from audit_logs where user_id = ?')) {
+          const [userId] = params;
+          return tables.audit_logs.filter(l => l.user_id === userId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 10);
+        }
+
+        return [];
+      }
+    };
+  },
+
+  // Direct persistence helpers for the Verification Gate module
+  gate: {
+    saveClaim: (record) => {
+      const idx = tables.gate_claims.findIndex(c => c.claim_id === record.claim_id);
+      if (idx >= 0) {
+        tables.gate_claims[idx] = { ...tables.gate_claims[idx], ...record };
+      } else {
+        tables.gate_claims.push(record);
+      }
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIMS, record.claim_id, tables.gate_claims.find(c => c.claim_id === record.claim_id));
+    },
+    getClaim: (claimId) => {
+      return tables.gate_claims.find(c => c.claim_id === claimId);
+    },
+    listClaims: () => {
+      return tables.gate_claims
+        .map(c => {
+          const deceased = tables.users.find(u => u.id === c.deceased_user_id);
+          return {
+            ...c,
+            deceased_name: deceased ? deceased.name : 'Unknown',
+            deceased_email: deceased ? deceased.email : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.initiated_at) - new Date(a.initiated_at));
+    },
+    clearClaims: () => {
+      tables.gate_claim_actions = [];
+      tables.gate_claims = [];
+      saveData();
+    },
+    insertAction: (action) => {
+      const entry = {
+        ...action,
+        executed_at: action.executed_at || new Date().toISOString()
+      };
+      tables.gate_claim_actions.push(entry);
+      saveData();
+      syncUpsert(COLLECTIONS.GATE_CLAIM_ACTIONS, entry.id, entry);
+    },
+    listActions: (claimId) => {
+      return tables.gate_claim_actions
+        .filter(a => a.claim_id === claimId)
+        .map(a => {
+          const asset = tables.assets.find(as => as.id === a.asset_id);
+          return {
+            ...a,
+            asset_name: asset ? asset.name : 'Unknown Asset',
+            asset_type: asset ? asset.type : 'Unknown'
+          };
+        })
+        .sort((a, b) => new Date(b.executed_at) - new Date(a.executed_at));
+    },
+    findActiveClaim: (claimantId, deceasedUserId) => {
+      return tables.gate_claims.find(
+        c =>
+          c.claimant_id === claimantId &&
+          c.deceased_user_id === deceasedUserId &&
+          !['REJECTED', 'EXECUTED', 'ABORTED_LIVENESS'].includes(c.status)
+      );
+    }
+  },
+
+  initCloud: () => initAndHydrate(tables),
+  isCloudConnected
+};
+
+// Seed demo data if users empty
 function seedDemoData() {
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
-  if (userCount.count > 0) return;
-
-  const { v4: uuidv4 } = require('uuid');
+  if (tables.users.length > 0) return;
 
   const johnId = uuidv4();
   const janeId = uuidv4();
@@ -159,178 +526,75 @@ function seedDemoData() {
   const johnHash = bcrypt.hashSync('demo123', 10);
   const janeHash = bcrypt.hashSync('demo123', 10);
 
-  db.prepare(`INSERT INTO users (id, name, email, password_hash, phone, kyc_status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-    johnId, 'John Doe', 'john@demo.com', johnHash, '+1-555-0101', 'verified'
-  );
-  db.prepare(`INSERT INTO users (id, name, email, password_hash, phone, kyc_status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-    janeId, 'Jane Smith', 'jane@demo.com', janeHash, '+1-555-0202', 'pending'
-  );
+  tables.users.push({
+    id: johnId,
+    name: 'John Doe',
+    email: 'john@demo.com',
+    password_hash: johnHash,
+    phone: '+1-555-0101',
+    kyc_status: 'verified',
+    created_at: new Date().toISOString()
+  });
 
-  // Add sample assets for John
+  tables.users.push({
+    id: janeId,
+    name: 'Jane Smith',
+    email: 'jane@demo.com',
+    password_hash: janeHash,
+    phone: '+1-555-0202',
+    kyc_status: 'pending',
+    created_at: new Date().toISOString()
+  });
+
   const assetId1 = uuidv4();
   const assetId2 = uuidv4();
-  db.prepare(`INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-    assetId1, johnId, 'bank', 'Chase Checking Account',
-    JSON.stringify({ bank: 'Chase Bank', account_number: '****1234', routing: '021000021' }),
-    'Transfer to nominee upon verified claim. Contact Chase estate services at 1-800-935-9935.',
-    janeId
-  );
-  db.prepare(`INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-    assetId2, johnId, 'crypto', 'Bitcoin Wallet',
-    JSON.stringify({ wallet_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf', exchange: 'Coinbase' }),
-    'Recovery phrase stored in LastPass vault. Nominee should contact Coinbase support with death certificate.',
-    janeId
-  );
+  tables.assets.push({
+    id: assetId1,
+    user_id: johnId,
+    type: 'bank',
+    name: 'Chase Checking Account',
+    details: JSON.stringify({ bank: 'Chase Bank', account_number: '****1234', routing: '021000021' }),
+    instructions: 'Transfer to nominee upon verified claim. Contact Chase estate services at 1-800-935-9935.',
+    nominee_id: janeId,
+    created_at: new Date().toISOString()
+  });
 
-  // Add Jane as a nominee for John
+  tables.assets.push({
+    id: assetId2,
+    user_id: johnId,
+    type: 'crypto',
+    name: 'Bitcoin Wallet',
+    details: JSON.stringify({ wallet_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf', exchange: 'Coinbase' }),
+    instructions: 'Recovery phrase stored in LastPass vault. Nominee should contact Coinbase support with death certificate.',
+    nominee_id: janeId,
+    created_at: new Date().toISOString()
+  });
+
   const nomineeId = uuidv4();
-  db.prepare(`INSERT INTO nominees (id, user_id, name, email, phone, relationship, key_share, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    nomineeId, johnId, 'Jane Smith', 'jane@demo.com', '+1-555-0202', 'spouse',
-    `HEIRFLOW-SHARE-${uuidv4().split('-').join('').substring(0, 24).toUpperCase()}`,
-    JSON.stringify({ can_view_assets: true, can_initiate_claims: true, can_access_files: true })
-  );
+  tables.nominees.push({
+    id: nomineeId,
+    user_id: johnId,
+    name: 'Jane Smith',
+    email: 'jane@demo.com',
+    phone: '+1-555-0202',
+    relationship: 'spouse',
+    key_share: `HEIRFLOW-SHARE-${uuidv4().split('-').join('').substring(0, 24).toUpperCase()}`,
+    permissions: JSON.stringify({ can_view_assets: true, can_initiate_claims: true, can_access_files: true }),
+    created_at: new Date().toISOString()
+  });
 
-  // Audit log
-  db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
-    uuidv4(), johnId, 'SEED_DATA_CREATED', JSON.stringify({ message: 'Demo data seeded' })
-  );
+  tables.audit_logs.push({
+    id: uuidv4(),
+    user_id: johnId,
+    action: 'SEED_DATA_CREATED',
+    details: JSON.stringify({ message: 'Demo data seeded' }),
+    created_at: new Date().toISOString()
+  });
 
+  saveData();
   console.log('✅ Demo data seeded: john@demo.com and jane@demo.com (password: demo123)');
 }
 
 seedDemoData();
 
-// Helper namespaces backed by SQLite for Verification Gate, Blockchain Ledger, and Email Outbox
-db.gate = {
-  saveClaim: (record) => {
-    db.prepare(`
-      INSERT INTO gate_claims (claim_id, deceased_user_id, claimant_id, status, evidence_path, state_json, grace_ends_at, initiated_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(claim_id) DO UPDATE SET
-        status = excluded.status,
-        evidence_path = COALESCE(excluded.evidence_path, gate_claims.evidence_path),
-        state_json = excluded.state_json,
-        grace_ends_at = excluded.grace_ends_at,
-        updated_at = excluded.updated_at
-    `).run(
-      record.claim_id,
-      record.deceased_user_id,
-      record.claimant_id || null,
-      record.status,
-      record.evidence_path || null,
-      record.state_json,
-      record.grace_ends_at || null,
-      record.initiated_at,
-      record.updated_at
-    );
-  },
-  getClaim: (claimId) => db.prepare('SELECT * FROM gate_claims WHERE claim_id = ?').get(claimId),
-  listClaims: () => db.prepare(`
-    SELECT gc.*, u.name as deceased_name, u.email as deceased_email
-    FROM gate_claims gc
-    JOIN users u ON gc.deceased_user_id = u.id
-    ORDER BY gc.initiated_at DESC
-  `).all(),
-  clearClaims: () => {
-    db.prepare('DELETE FROM gate_claim_actions').run();
-    db.prepare('DELETE FROM gate_claims').run();
-  },
-  insertAction: (action) => {
-    db.prepare(`
-      INSERT INTO gate_claim_actions (id, claim_id, asset_id, action_type, status, encrypted_payload, contract_address, tx_hash, result_notes, executed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      action.id,
-      action.claim_id,
-      action.asset_id,
-      action.action_type,
-      action.status || 'completed',
-      action.encrypted_payload || null,
-      action.contract_address || null,
-      action.tx_hash || null,
-      action.result_notes || null,
-      action.executed_at || new Date().toISOString()
-    );
-  },
-  listActions: (claimId) => db.prepare(`
-    SELECT gca.*, a.name as asset_name, a.type as asset_type
-    FROM gate_claim_actions gca
-    JOIN assets a ON gca.asset_id = a.id
-    WHERE gca.claim_id = ?
-    ORDER BY gca.executed_at DESC
-  `).all(claimId),
-  findActiveClaimByDeceased: (deceasedUserId) => db.prepare(`
-    SELECT * FROM gate_claims
-    WHERE deceased_user_id = ? AND status NOT IN ('REJECTED', 'EXECUTED', 'ABORTED_LIVENESS')
-    LIMIT 1
-  `).get(deceasedUserId),
-  destroyNomineeKeys: (deceasedUserId) => {
-    const destroyedAt = new Date().toISOString();
-    const res = db.prepare(`
-      UPDATE nominees
-      SET key_share = NULL, key_status = 'DESTROYED', key_destroyed_at = ?
-      WHERE user_id = ?
-    `).run(destroyedAt, deceasedUserId);
-    return { destroyedCount: res.changes, destroyedAt };
-  }
-};
-
-db.emailOutbox = {
-  save: (entry) => {
-    db.prepare(`
-      INSERT INTO email_outbox (id, recipient, subject, category, preview, delivery_status, sent_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(entry.id, entry.to, entry.subject, entry.category || 'GENERAL', entry.preview || '', entry.delivery_status || 'logged_local', entry.sent_at);
-  },
-  list: () => db.prepare('SELECT * FROM email_outbox ORDER BY sent_at DESC LIMIT 50').all()
-};
-
-db.blockchain = {
-  getBlocks: () => db.prepare('SELECT * FROM blockchain_ledger ORDER BY block_index ASC').all().map(r => ({
-    index: r.block_index,
-    timestamp: r.timestamp,
-    claimId: r.claim_id,
-    stage: r.stage,
-    actor: r.actor,
-    contractAddress: r.contract_address,
-    dataHash: r.data_hash,
-    previousHash: r.previous_hash,
-    blockHash: r.block_hash,
-    txHash: r.tx_hash,
-    metadata: r.metadata_json ? JSON.parse(r.metadata_json) : {}
-  })),
-  getBlocksForClaim: (claimId) => db.prepare('SELECT * FROM blockchain_ledger WHERE claim_id = ? ORDER BY block_index ASC').all(claimId).map(r => ({
-    index: r.block_index,
-    timestamp: r.timestamp,
-    claimId: r.claim_id,
-    stage: r.stage,
-    actor: r.actor,
-    contractAddress: r.contract_address,
-    dataHash: r.data_hash,
-    previousHash: r.previous_hash,
-    blockHash: r.block_hash,
-    txHash: r.tx_hash,
-    metadata: r.metadata_json ? JSON.parse(r.metadata_json) : {}
-  })),
-  appendBlock: (block) => {
-    db.prepare(`
-      INSERT INTO blockchain_ledger (block_index, timestamp, claim_id, stage, actor, contract_address, data_hash, previous_hash, block_hash, tx_hash, metadata_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      block.index,
-      block.timestamp,
-      block.claimId,
-      block.stage,
-      block.actor,
-      block.contractAddress,
-      block.dataHash,
-      block.previousHash,
-      block.blockHash,
-      block.txHash,
-      JSON.stringify(block.metadata || {})
-    );
-  }
-};
-
 module.exports = db;
-

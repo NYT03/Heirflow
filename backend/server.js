@@ -25,7 +25,6 @@ const dashboardRoutes = require('./routes/dashboard');
 const geminiRoutes = require('./routes/gemini');
 const storageRoutes = require('./routes/storage');
 const verificationRoutes = require('./routes/verification');
-const aaRoutes = require('./routes/accountAggregator');
 const googleRoutes = require('./routes/googleDiscovery');
 
 app.use('/api/auth', authRoutes);
@@ -35,7 +34,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/storage', storageRoutes);
 app.use('/api/verification', verificationRoutes);
-app.use('/api/aa', aaRoutes);
 app.use('/api/google', googleRoutes);
 
 // Health check endpoint (for Cloud Run probes and monitoring)
@@ -80,8 +78,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 HeirFlow running on http://0.0.0.0:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`\n🚀 HeirFlow running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
   console.log(`☁️ Cloud Run environment: ${process.env.K_SERVICE ? 'ACTIVE' : 'LOCAL'}`);
   console.log(`🗄️ Google Cloud Storage: ${process.env.GCS_BUCKET_NAME || 'local fallback'}`);
