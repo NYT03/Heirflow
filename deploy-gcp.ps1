@@ -52,7 +52,7 @@ if (-not [string]::IsNullOrWhiteSpace($GcsBucket)) {
 }
 
 # 5. Build environment variables string
-$envVars = "NODE_ENV=production,PORT=8080,GCP_PROJECT_ID=$ProjectId,FIRESTORE_DATABASE_ID=$FirestoreDb"
+$envVars = "NODE_ENV=production,GCP_PROJECT_ID=$ProjectId,FIRESTORE_DATABASE_ID=$FirestoreDb"
 if (-not [string]::IsNullOrWhiteSpace($GeminiApiKey)) {
     $envVars += ",GEMINI_API_KEY=$GeminiApiKey"
 }

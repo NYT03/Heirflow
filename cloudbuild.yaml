@@ -34,7 +34,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'NODE_ENV=production,PORT=8080,GCP_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE_ID=hierflow-db,GCS_BUCKET_NAME=heirflow-evidence-vault'
+      - 'NODE_ENV=production,GCP_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE_ID=hierflow-db,GCS_BUCKET_NAME=heirflow-evidence-vault'
 
 substitutions:
   _REGION: asia-south1
