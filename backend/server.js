@@ -24,6 +24,7 @@ const claimRoutes = require('./routes/claims');
 const dashboardRoutes = require('./routes/dashboard');
 const geminiRoutes = require('./routes/gemini');
 const storageRoutes = require('./routes/storage');
+const googleRoutes = require('./routes/googleDiscovery');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
@@ -32,6 +33,7 @@ app.use('/api/claims', claimRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/storage', storageRoutes);
+app.use('/api/google', googleRoutes);
 
 // Health check endpoint (for Cloud Run probes and monitoring)
 app.get('/api/health', (req, res) => {
