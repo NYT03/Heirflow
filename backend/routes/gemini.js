@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const auth = require('../middleware/auth');
+const { generateChatResponse, analyzeDocument } = require('../services/geminiService');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 const MOCK_RESPONSES = {
   assets: [
@@ -32,7 +39,6 @@ const MOCK_RESPONSES = {
 
 function getMockResponse(message) {
   const lower = message.toLowerCase();
-  
   let category = 'planning';
   if (lower.includes('asset') || lower.includes('bank') || lower.includes('crypto') || lower.includes('property')) {
     category = 'assets';
@@ -43,14 +49,11 @@ function getMockResponse(message) {
   } else if (lower.includes('security') || lower.includes('password') || lower.includes('key') || lower.includes('safe')) {
     category = 'security';
   }
-
   const responses = MOCK_RESPONSES[category];
-  const response = responses[Math.floor(Math.random() * responses.length)];
-  
-  return response;
+  return responses[Math.floor(Math.random() * responses.length)];
 }
 
-// POST /api/gemini/chat
+// POST /api/gemini/chat — conversational estate copilot
 router.post('/chat', auth, async (req, res) => {
   try {
     const { message, context } = req.body;
@@ -58,71 +61,22 @@ router.post('/chat', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'message is required' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    const hasRealKey = apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.length > 10;
-
-    if (hasRealKey) {
-      // Call real Gemini API
-      try {
-        const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
-        const systemPrompt = `You are HeirFlow's AI estate planning assistant. HeirFlow is a digital estate management platform that helps users catalog their assets (bank accounts, crypto, subscriptions, property, files, social media), assign nominees/beneficiaries, and manage the inheritance claim process.
-
-Your role is to provide helpful, accurate, and empathetic guidance about:
-- Digital estate planning
-- Asset documentation best practices
-- Nominee selection and management
-- The HeirFlow claim and verification process
-- Legal considerations (without giving specific legal advice)
-- Security best practices for digital assets
-
-Context: ${context || 'General estate planning conversation'}
-
-Keep responses concise (2-3 paragraphs max), practical, and specific to the user's question.`;
-
-        const payload = {
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\nUser question: ${message}` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 500
-          }
-        };
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Gemini API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || getMockResponse(message);
-        
-        return res.json({ success: true, data: { reply, source: 'gemini' } });
-      } catch (apiErr) {
-        console.warn('Gemini API call failed, using mock:', apiErr.message);
-        // Fall through to mock
+    try {
+      const liveReply = await generateChatResponse(message, context);
+      if (liveReply) {
+        return res.json({ success: true, data: { reply: liveReply, source: 'gemini-1.5-flash' } });
       }
+    } catch (err) {
+      console.warn('Live Gemini API error, falling back to mock:', err.message);
     }
 
-    // Mock response
     const reply = getMockResponse(message);
     return res.json({
       success: true,
       data: {
         reply,
         source: 'mock',
-        note: 'Set a valid GEMINI_API_KEY in .env to enable AI-powered responses'
+        note: 'Provide a valid GEMINI_API_KEY in .env to activate live Google Gemini 1.5 Flash'
       }
     });
   } catch (err) {
@@ -130,5 +84,27 @@ Keep responses concise (2-3 paragraphs max), practical, and specific to the user
   }
 });
 
-module.exports = router;
+// POST /api/gemini/analyze-document — multimodal document verification
+router.post('/analyze-document', auth, upload.single('document'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Document file is required' });
+    }
 
+    const docType = req.body.document_type || 'death_certificate';
+    const analysis = await analyzeDocument(req.file.buffer, req.file.mimetype, docType);
+
+    return res.json({
+      success: true,
+      data: {
+        filename: req.file.originalname,
+        ...analysis,
+      },
+    });
+  } catch (err) {
+    console.error('Document analysis error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+module.exports = router;
