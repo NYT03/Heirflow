@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Upload, AlertCircle, CheckCircle2, Clock, XCircle, ChevronRight, FileText } from 'lucide-react';
+import { Upload, CheckCircle2, Clock, FileText } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
 import api from '../api/client';
 import { Claim } from '../types';
-import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const CLAIM_STEPS = ['Submitted', 'Under Review', 'Grace Period', 'Approved', 'Executing', 'Complete'];
@@ -29,7 +28,6 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const NomineeClaim: React.FC = () => {
-  const { user } = useAuth();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

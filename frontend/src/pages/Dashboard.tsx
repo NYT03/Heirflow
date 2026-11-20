@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Database, Users, Shield, Plus, ArrowRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { TrendingUp, Database, Users, Shield, Plus, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
 import { useAuth } from '../context/AuthContext';
@@ -45,12 +45,6 @@ const Dashboard: React.FC = () => {
     { label: 'Nominees Set', value: data?.nominees_count ?? '—', icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { label: 'Estate Status', value: completeness >= 100 ? 'Active' : 'Draft', icon: Shield, color: completeness >= 100 ? 'text-green-400' : 'text-yellow-400', bg: completeness >= 100 ? 'bg-green-500/10' : 'bg-yellow-500/10' },
     { label: 'Completeness', value: `${completeness}%`, icon: TrendingUp, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  ];
-
-  const quickActions = [
-    { label: '+ Add Asset', to: '/assets', color: 'bg-blue-600 hover:bg-blue-500', icon: Database },
-    { label: '+ Add Nominee', to: '/nominees', color: 'bg-purple-600 hover:bg-purple-500', icon: Users },
-    { label: 'View Estate Plan', to: '/estate-plan', color: 'bg-indigo-600 hover:bg-indigo-500', icon: FileText },
   ];
 
   if (loading) {

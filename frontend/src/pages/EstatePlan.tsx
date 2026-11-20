@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Circle, Shield, Zap, AlertTriangle, X, ChevronRight, FileText } from 'lucide-react';
+import { CheckCircle2, Shield, Zap, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
 import api from '../api/client';
