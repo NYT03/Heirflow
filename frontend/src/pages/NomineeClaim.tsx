@@ -62,6 +62,7 @@ const NomineeClaim: React.FC = () => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [extraShareInputs, setExtraShareInputs] = useState<Record<string, { nomineeId: string; rawShare: string }>>({});
+  const [decryptedByClaim, setDecryptedByClaim] = useState<Record<string, any[]>>({});
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -142,7 +143,11 @@ const NomineeClaim: React.FC = () => {
       });
 
       if (res.data.success) {
-        toast.success(`Claim initiated (${res.data.data.status.replace(/_/g, ' ')})`);
+        if (res.data.joinedExistingClaim) {
+          toast.success(res.data.message || 'Joined existing claim towards 2/3 quorum!');
+        } else {
+          toast.success(`Claim initiated (${res.data.data.status.replace(/_/g, ' ')})`);
+        }
         setForm(INITIAL_FORM);
         setSelectedFile(null);
         fetchClaims();
@@ -208,11 +213,23 @@ const NomineeClaim: React.FC = () => {
     try {
       const res = await api.post(`/verification/claims/${claimId}/execute`, {});
       if (res.data.success) {
-        toast.success('Grace period complete — asset handover executed!');
+        toast.success('Smart Contract executed — encrypted assets released & key shares destroyed!');
         fetchClaims();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Cannot execute claim yet');
+    }
+  };
+
+  const handleDecryptAssets = async (claimId: string) => {
+    try {
+      const res = await api.post(`/verification/claims/${claimId}/decrypt-assets`, {});
+      if (res.data.success) {
+        setDecryptedByClaim(p => ({ ...p, [claimId]: res.data.data.assets || [] }));
+        toast.success('Assets decrypted via Smart Contract & Blockchain verification!');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to decrypt assets');
     }
   };
 
@@ -238,7 +255,7 @@ const NomineeClaim: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-white">Verification Gate & Claims Portal</h1>
             <p className="text-slate-400 mt-1">
-              Submit death certificate, verify against official registry, and collect N-of-M nominee shares
+              2/3 nominee quorum, government registry verification, blockchain audit trail &amp; encrypted Smart Contract handover
             </p>
           </div>
           <button
@@ -263,7 +280,10 @@ const NomineeClaim: React.FC = () => {
 
         {/* Submit Claim Form */}
         <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Initiate Verified Inheritance Claim</h2>
+          <h2 className="text-lg font-semibold text-white mb-1">Initiate or Join Inheritance Claim</h2>
+          <p className="text-xs text-slate-400 mb-4">
+            If another nominee already opened a claim for this estate, submitting your share here automatically joins the existing claim towards the 2/3 quorum.
+          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -356,6 +376,74 @@ const NomineeClaim: React.FC = () => {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Certificate Reg. Number *</label>
+                <input
+                  type="text"
+                  value={form.registrationNumber}
+                  onChange={e => setForm(p => ({ ...p, registrationNumber: e.target.value }))}
+                  placeholder="GJ-AHM-2024-D-098234"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Deceased Name on Cert *</label>
+                <input
+                  type="text"
+                  value={form.deceasedName}
+                  onChange={e => setForm(p => ({ ...p, deceasedName: e.target.value }))}
+                  placeholder="John Doe"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Date of Death *</label>
+                <input
+                  type="date"
+                  value={form.dateOfDeath}
+                  onChange={e => setForm(p => ({ ...p, dateOfDeath: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Registry / State Source *</label>
+                <input
+                  type="text"
+                  value={form.stateOrMunicipality}
+                  onChange={e => setForm(p => ({ ...p, stateOrMunicipality: e.target.value }))}
+                  placeholder="Central CRS / Gujarat e-Olakh"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">QR Verification URL (.gov.in / .nic.in)</label>
+                <input
+                  type="url"
+                  value={form.qrPayload}
+                  onChange={e => setForm(p => ({ ...p, qrPayload: e.target.value }))}
+                  placeholder="https://eolakh.gujarat.gov.in/verify/..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Grace Period</label>
+                <select
+                  value={form.gracePeriodSeconds}
+                  onChange={e => setForm(p => ({ ...p, gracePeriodSeconds: Number(e.target.value) }))}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                >
+                  <option value={10}>10 Seconds (Demo Mode)</option>
+                  <option value={60}>1 Minute (Demo Mode)</option>
+                  <option value={604800}>7 Days (Production)</option>
+                  <option value={1209600}>14 Days (Production)</option>
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">Death Certificate Document (optional)</label>
               <label className="flex items-center gap-3 w-full bg-slate-900 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl px-4 py-3.5 cursor-pointer transition-colors">
@@ -375,14 +463,14 @@ const NomineeClaim: React.FC = () => {
             <div className="p-3 bg-amber-900/20 border border-amber-700/30 rounded-xl">
               <p className="text-xs text-amber-300 leading-relaxed">
                 ⚠️ <strong>Verification Gate:</strong> QR domains must strictly belong to <code>*.gov.in</code> or <code>*.nic.in</code>.
-                Unsigned or modified PDFs are flagged for manual review. Execution is locked until the grace period finishes.
+                Every claim stage is hashed onto the blockchain. Assets are AES-256-GCM encrypted and released via Smart Contract only after the grace period ends, after which all nominee key shares are permanently destroyed.
               </p>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-lg"
+              className="bg-zinc-100 hover:bg-white disabled:opacity-50 text-zinc-950 px-6 py-2.5 rounded-lg font-semibold text-sm transition-colors"
             >
               {submitting ? 'Verifying & Submitting...' : 'Submit to Verification Gate'}
             </button>
@@ -417,7 +505,7 @@ const NomineeClaim: React.FC = () => {
                       </p>
                       <p className="text-xs text-slate-400 mt-0.5">
                         Reg: <span className="font-mono">{claim.certificateMetadata?.registrationNumber}</span> •
-                        Quorum: {claim.submittedShares.length}/{claim.quorumConfig.requiredQuorum} required ({claim.quorumConfig.totalNominees} nominees) •
+                        2/3 Quorum: {claim.submittedShares.length}/{claim.quorumConfig.requiredQuorum} required ({claim.quorumConfig.totalNominees} nominees) •
                         Filed {new Date(claim.initiatedAt).toLocaleString()}
                       </p>
                     </div>
@@ -505,13 +593,13 @@ const NomineeClaim: React.FC = () => {
                       <div className="flex items-center gap-2 text-sm font-medium text-yellow-300">
                         <Key className="w-4 h-4" />
                         <span>
-                          Waiting for {claim.quorumConfig.requiredQuorum - claim.submittedShares.length} more nominee key share(s)
+                          Waiting for {claim.quorumConfig.requiredQuorum - claim.submittedShares.length} more nominee key share(s) to meet 2/3 quorum
                         </span>
                       </div>
                       <div className="grid sm:grid-cols-3 gap-2">
                         <input
                           type="text"
-                          placeholder="Nominee email"
+                          placeholder="Nominee email (optional if logged in)"
                           value={extraShareInputs[claim.claimId]?.nomineeId || ''}
                           onChange={e =>
                             setExtraShareInputs(p => ({
@@ -579,28 +667,91 @@ const NomineeClaim: React.FC = () => {
                             onClick={() => handleExecute(claim.claimId)}
                             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
                           >
-                            <Play className="w-3.5 h-3.5" /> Execute Handover
+                            <Play className="w-3.5 h-3.5" /> Execute Smart Contract
                           </button>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Executed Asset Handover Actions */}
-                  {claim.status === 'EXECUTED' && claim.actions && claim.actions.length > 0 && (
-                    <div className="p-4 bg-emerald-900/15 border border-emerald-700/30 rounded-xl space-y-2">
-                      <p className="text-sm font-semibold text-emerald-300">Executed Asset Handover Actions</p>
-                      <div className="divide-y divide-slate-700/50">
-                        {claim.actions.map(action => (
-                          <div key={action.id} className="py-2 flex items-center justify-between text-xs">
-                            <div>
-                              <span className="font-medium text-white">{action.asset_name}</span>
-                              <span className="ml-2 text-slate-400 uppercase">({action.action_type})</span>
-                              <p className="text-slate-400 mt-0.5">{action.result_notes}</p>
+                  {/* Executed Asset Handover Actions + Smart Contract Decryption */}
+                  {claim.status === 'EXECUTED' && (
+                    <div className="p-4 bg-emerald-900/15 border border-emerald-700/30 rounded-xl space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-300">
+                            Smart Contract Executed • Key Shares Destroyed ✓
+                          </p>
+                          {claim.contractAddress && (
+                            <p className="text-xs font-mono text-slate-400 mt-0.5">
+                              Contract: {claim.contractAddress} • Tx: {claim.executionTxHash?.slice(0, 18)}...
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDecryptAssets(claim.claimId)}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors"
+                        >
+                          🔓 Decrypt &amp; View Inherited Assets
+                        </button>
+                      </div>
+
+                      {decryptedByClaim[claim.claimId] ? (
+                        <div className="space-y-2 pt-2 border-t border-emerald-700/30">
+                          {decryptedByClaim[claim.claimId].map((item: any) => (
+                            <div key={item.actionId} className="bg-slate-900/80 border border-slate-700 rounded-lg p-3 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="font-semibold text-white">{item.assetName} ({item.assetType})</span>
+                                <span className="text-emerald-400 uppercase font-mono">{item.actionType}</span>
+                              </div>
+                              <p className="text-slate-300">
+                                <strong>Instructions:</strong> {item.decrypted?.instructions}
+                              </p>
+                              <pre className="text-slate-400 bg-slate-950/70 p-2 rounded overflow-x-auto">
+                                {JSON.stringify(item.decrypted?.details, null, 2)}
+                              </pre>
                             </div>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-medium">
-                              {action.status}
-                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        claim.actions && claim.actions.length > 0 && (
+                          <div className="divide-y divide-slate-700/50">
+                            {claim.actions.map(action => (
+                              <div key={action.id} className="py-2 flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="font-medium text-white">{action.asset_name}</span>
+                                  <span className="ml-2 text-slate-400 uppercase">({action.action_type})</span>
+                                  <p className="text-slate-400 mt-0.5">{action.result_notes}</p>
+                                </div>
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-medium">
+                                  {action.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+
+                  {/* Blockchain Audit Trail */}
+                  {claim.blockchain && claim.blockchain.blocks.length > 0 && (
+                    <div className="p-3.5 bg-slate-900/70 border border-slate-700/80 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-indigo-300">
+                          ⛓️ Immutable Blockchain Stage Ledger ({claim.blockchain.blocks.length} blocks)
+                        </span>
+                        <span className={`font-medium ${claim.blockchain.chainIntegrity.valid ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {claim.blockchain.chainIntegrity.valid ? 'Chain Integrity Verified ✓' : 'Chain Compromised ✗'}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                        {claim.blockchain.blocks.map(b => (
+                          <div key={b.index} className="flex flex-wrap items-center justify-between gap-2 text-[11px] bg-slate-800/70 px-2.5 py-1.5 rounded-lg">
+                            <span className="font-mono text-indigo-300">#{b.index} {b.stage}</span>
+                            <span className="font-mono text-slate-400 truncate max-w-[220px]">tx: {b.txHash}</span>
+                            <span className="text-slate-500">{new Date(b.timestamp).toLocaleTimeString()}</span>
                           </div>
                         ))}
                       </div>

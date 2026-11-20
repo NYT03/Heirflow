@@ -18,6 +18,7 @@ const maskShare = (share: string) => {
 
 const Nominees: React.FC = () => {
   const [nominees, setNominees] = useState<Nominee[]>([]);
+  const [assignedToMe, setAssignedToMe] = useState<Nominee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editNominee, setEditNominee] = useState<Nominee | null>(null);
@@ -27,8 +28,12 @@ const Nominees: React.FC = () => {
 
   const fetchNominees = async () => {
     try {
-      const res = await api.get('/nominees');
-      if (res.data.success) setNominees(res.data.data);
+      const [ownRes, assignedRes] = await Promise.all([
+        api.get('/nominees'),
+        api.get('/nominees/assigned-to-me'),
+      ]);
+      if (ownRes.data.success) setNominees(ownRes.data.data);
+      if (assignedRes.data.success) setAssignedToMe(assignedRes.data.data);
     } catch { toast.error('Failed to load nominees'); }
     finally { setLoading(false); }
   };
@@ -102,10 +107,13 @@ const Nominees: React.FC = () => {
         <div className="bg-indigo-900/20 border border-indigo-700/40 rounded-2xl p-4 mb-6 flex items-start gap-3">
           <Key className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-indigo-300">Key Share Quorum System</p>
+            <p className="text-sm font-medium text-indigo-300">2/3 Key Share Quorum System</p>
             <p className="text-sm text-slate-400 mt-0.5">
-              <strong className="text-white">2 of {Math.max(nominees.length, 3)} nominees</strong> must submit their key share to unlock the estate.
-              Each nominee receives a unique cryptographic share on creation.
+              <strong className="text-white">
+                {nominees.length > 0 ? Math.max(1, Math.ceil((2 * nominees.length) / 3)) : 2} of {nominees.length || 3} nominees
+              </strong>{' '}
+              (2/3 majority) must submit their key share to unlock the estate.
+              Each nominee receives an email and a unique cryptographic share on creation, which is permanently destroyed once settled.
             </p>
           </div>
         </div>
@@ -134,7 +142,7 @@ const Nominees: React.FC = () => {
                 <div key={nominee.id} className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 hover:border-slate-600 transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${avatarColor(nominee.name)} rounded-xl flex items-center justify-center text-white font-bold text-sm`}>
+                      <div className="w-11 h-11 bg-zinc-800 border border-zinc-700 rounded-xl flex items-center justify-center text-zinc-200 font-semibold text-sm">
                         {initials(nominee.name)}
                       </div>
                       <div>
@@ -166,25 +174,82 @@ const Nominees: React.FC = () => {
 
                   {/* Key Share */}
                   <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                        <span className="font-mono text-sm text-amber-200">
-                          {revealed ? (nominee.key_share || 'KS-' + nominee.id.slice(0, 12)) : maskShare(nominee.key_share || nominee.id)}
-                        </span>
+                    {nominee.key_status === 'DESTROYED' || !nominee.key_share ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Key className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                          <span className="font-mono text-xs text-rose-300 font-semibold">
+                            KEY SHARE DESTROYED (Claim Settled)
+                          </span>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => toggleReveal(nominee.id)}
-                        className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
-                      >
-                        {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Cryptographic key share — share securely</p>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <Key className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                            <span className="font-mono text-sm text-amber-200 truncate">
+                              {revealed ? nominee.key_share : maskShare(nominee.key_share)}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => toggleReveal(nominee.id)}
+                            className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                          >
+                            {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Cryptographic key share — share securely</p>
+                      </>
+                    )}
                   </div>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Key Shares Assigned to Logged-in User (Nominee View) */}
+        {assignedToMe.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold text-white mb-1">Key Shares Assigned to Me</h2>
+            <p className="text-sm text-slate-400 mb-4">
+              Estates where your account is designated as a trusted nominee
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {assignedToMe.map(item => {
+                const isRevealed = revealedShares.has(`assigned-${item.id}`);
+                const destroyed = item.key_status === 'DESTROYED' || !item.key_share;
+                return (
+                  <div key={item.id} className="bg-slate-800/60 border border-indigo-500/30 rounded-2xl p-5">
+                    <div className="mb-3">
+                      <p className="text-xs uppercase tracking-wider text-indigo-400 font-semibold">Estate Owner</p>
+                      <h3 className="font-semibold text-white">{item.owner_name}</h3>
+                      <p className="text-xs text-slate-400">{item.owner_email} • {item.relationship || 'Nominee'}</p>
+                    </div>
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-xl p-3">
+                      {destroyed ? (
+                        <p className="font-mono text-xs text-rose-300 font-semibold">
+                          KEY SHARE DESTROYED {item.key_destroyed_at ? `(${new Date(item.key_destroyed_at).toLocaleDateString()})` : ''}
+                        </p>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-xs text-amber-200 truncate">
+                            {isRevealed ? item.key_share : maskShare(item.key_share || '')}
+                          </span>
+                          <button
+                            onClick={() => toggleReveal(`assigned-${item.id}`)}
+                            className="text-slate-400 hover:text-white flex-shrink-0"
+                          >
+                            {isRevealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

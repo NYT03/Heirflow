@@ -5,6 +5,17 @@ const db = require('../db');
 const auth = require('../middleware/auth');
 const GoogleAccountAssetScanner = require('../services/googleAccountAssetScanner');
 
+// GET /api/google/oauth-config — exposes public Google OAuth Client ID if configured
+router.get('/oauth-config', (req, res) => {
+  return res.json({
+    success: true,
+    data: {
+      clientId: process.env.GOOGLE_CLIENT_ID || null,
+      scope: 'https://www.googleapis.com/auth/gmail.readonly',
+    },
+  });
+});
+
 // GET /api/google/capabilities
 router.get('/capabilities', (req, res) => {
   return res.json({
@@ -27,89 +38,90 @@ router.post('/scan', auth, async (req, res) => {
   try {
     const { accessToken, email, forceLive } = req.body;
     const targetEmail = email || req.user.email || 'user@gmail.com';
+    const token = accessToken || process.env.GOOGLE_OAUTH_ACCESS_TOKEN;
+
+    if (forceLive && !token) {
+      return res.status(400).json({
+        success: false,
+        error: 'A Gmail OAuth access token (gmail.readonly) is required for live scanning.',
+      });
+    }
 
     const scanner = new GoogleAccountAssetScanner({
-      accessToken: accessToken || process.env.GOOGLE_OAUTH_ACCESS_TOKEN,
+      accessToken: token,
       email: targetEmail,
-      mockMode: !accessToken && !process.env.GOOGLE_OAUTH_ACCESS_TOKEN && !forceLive
+      mockMode: !token,
     });
 
     const report = await scanner.scanAll();
 
-    // Log the discovery scan action
-    try {
-      db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
-        uuidv4(),
-        req.user.id,
-        'GOOGLE_ACCOUNT_SCANNED',
-        JSON.stringify({ email: targetEmail, totalDiscovered: report.summary.totalAssets })
-      );
-    } catch (auditErr) {
-      console.warn('Audit log write error:', auditErr.message);
-    }
+    // Mark assets already present in user's vault
+    const existingAssets = db.prepare('SELECT name FROM assets WHERE user_id = ?').all(req.user.id);
+    const existingNames = new Set(existingAssets.map((a) => a.name.toLowerCase()));
+
+    const discoveredAssets = report.discoveredAssets.map((asset) => ({
+      ...asset,
+      alreadyImported: existingNames.has(asset.name.toLowerCase()),
+    }));
+
+    db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
+      uuidv4(),
+      req.user.id,
+      'GOOGLE_ACCOUNT_SCANNED',
+      JSON.stringify({ email: targetEmail, totalDiscovered: discoveredAssets.length })
+    );
 
     return res.json({
       success: true,
-      data: report
+      data: {
+        ...report,
+        discoveredAssets,
+      },
     });
   } catch (err) {
-    console.error('Google scan error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/google/import — Batch import selected discovered assets into HeirFlow
-router.post('/import', auth, async (req, res) => {
+// POST /api/google/import — Import selected discovered bank accounts into the user's Vault with nominee assignment
+router.post('/import', auth, (req, res) => {
   try {
     const { assets, nominee_id } = req.body;
-    if (!assets || !Array.isArray(assets) || assets.length === 0) {
-      return res.status(400).json({ success: false, error: 'assets array is required for import' });
+    if (!Array.isArray(assets) || assets.length === 0) {
+      return res.status(400).json({ success: false, error: 'assets array is required' });
     }
 
-    const scanner = new GoogleAccountAssetScanner({ email: req.user.email });
-    const formattedAssets = scanner.toHeirFlowAssets(assets, req.user.id, nominee_id || null);
+    const inserted = [];
+    const insertStmt = db.prepare(
+      `INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    );
 
-    const insertStmt = db.prepare(`
-      INSERT INTO assets (id, user_id, type, name, details, instructions, nominee_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+    for (const item of assets) {
+      const id = uuidv4();
+      insertStmt.run(
+        id,
+        req.user.id,
+        'bank',
+        item.name,
+        typeof item.details === 'string' ? item.details : JSON.stringify(item.details || {}),
+        item.instructions || 'Transfer bank account balance to designated nominee upon verified claim.',
+        item.nominee_id || nominee_id || null
+      );
+      inserted.push(id);
+    }
 
-    const imported = [];
-    const runTransaction = db.transaction((items) => {
-      for (const item of items) {
-        insertStmt.run(
-          item.id,
-          item.user_id,
-          item.type,
-          item.name,
-          JSON.stringify(item.details || {}),
-          item.instructions || null,
-          item.nominee_id || null
-        );
-        imported.push(item);
-      }
-    });
-
-    runTransaction(formattedAssets);
-
-    // Write audit log
     db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(
       uuidv4(),
       req.user.id,
       'ASSETS_IMPORTED_FROM_GOOGLE',
-      JSON.stringify({ count: imported.length, assetNames: imported.map(a => a.name) })
+      JSON.stringify({ count: inserted.length, assetNames: assets.map((a) => a.name) })
     );
 
     return res.status(201).json({
       success: true,
-      data: {
-        message: `Successfully imported ${imported.length} assets from Google account`,
-        importedCount: imported.length,
-        assets: imported
-      }
+      data: { importedCount: inserted.length, ids: inserted },
     });
   } catch (err) {
-    console.error('Import error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
