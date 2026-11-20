@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 // POST /api/claims — nominee initiates a claim
 router.post('/', auth, (req, res) => {
   try {
-    const { deceased_email, key_share } = req.body;
+    const { deceased_email, key_share, evidence_path } = req.body;
     if (!deceased_email) {
       return res.status(400).json({ success: false, error: 'deceased_email is required' });
     }
@@ -30,8 +30,8 @@ router.post('/', auth, (req, res) => {
     }
 
     const id = uuidv4();
-    db.prepare(`INSERT INTO claims (id, claimant_id, deceased_user_id, status, submitted_at, updated_at) VALUES (?, ?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`).run(
-      id, req.user.id, deceased.id
+    db.prepare(`INSERT INTO claims (id, claimant_id, deceased_user_id, status, evidence_path, submitted_at, updated_at) VALUES (?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`).run(
+      id, req.user.id, deceased.id, evidence_path || null
     );
 
     db.prepare(`INSERT INTO audit_logs (id, user_id, action, details) VALUES (?, ?, ?, ?)`).run(

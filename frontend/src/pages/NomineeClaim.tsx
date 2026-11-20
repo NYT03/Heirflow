@@ -32,6 +32,7 @@ const NomineeClaim: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ deceased_email: '', key_share: '', certificate_name: '' });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -51,7 +52,10 @@ const NomineeClaim: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setForm(p => ({ ...p, certificate_name: file.name }));
+    if (file) {
+      setSelectedFile(file);
+      setForm(p => ({ ...p, certificate_name: file.name }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,10 +63,27 @@ const NomineeClaim: React.FC = () => {
     if (!form.deceased_email || !form.key_share) { toast.error('Email and key share are required'); return; }
     setSubmitting(true);
     try {
-      const res = await api.post('/claims', { deceased_email: form.deceased_email, key_share: form.key_share });
+      let evidence_path = '';
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('folder', 'death_certificates');
+        const uploadRes = await api.post('/storage/upload', formData);
+        if (uploadRes.data.success) {
+          evidence_path = uploadRes.data.data.file_url;
+        }
+      }
+
+      const res = await api.post('/claims', {
+        deceased_email: form.deceased_email,
+        key_share: form.key_share,
+        evidence_path: evidence_path || form.certificate_name,
+      });
+
       if (res.data.success) {
-        toast.success('Claim submitted successfully!');
+        toast.success('Claim and evidence submitted to storage!');
         setForm({ deceased_email: '', key_share: '', certificate_name: '' });
+        setSelectedFile(null);
         fetchClaims();
       } else {
         toast.error(res.data.error || 'Failed to submit claim');
