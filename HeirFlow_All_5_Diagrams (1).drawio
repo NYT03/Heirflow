@@ -1,0 +1,773 @@
+<mxfile host="app.diagrams.net" pages="5">
+  <diagram name="1 - Whole System Architecture" id="architecture">
+    <mxGraphModel dx="1700" dy="1500" grid="1" gridSize="10" page="1" pageWidth="1700" pageHeight="1500">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t" value="HEIRFLOW — WHOLE SYSTEM ARCHITECTURE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0f172a;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="20" width="700" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="apps" value="USER APP (WEB / MOBILE)\nRegistration • Asset mapping • Estate planning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="110" width="650" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="nom" value="NOMINEE APP (WEB / MOBILE)\nClaim initiation • Verification • Asset access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="110" width="650" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="API GATEWAY\nRouting • Rate limiting • API security" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="220" width="700" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="iam" value="IDENTITY &amp; ACCESS MANAGEMENT\nAuthentication • Identity verification • Roles • Consent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1eaff;strokeColor=#7b61a8;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="310" width="700" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="apps" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="nom" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="api" target="iam">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="profile" value="User profile service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="be0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="iam" target="profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="discovery" value="Digital asset discovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="420" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="be1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="iam" target="discovery">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="benef" value="Nominee &amp; beneficiary service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="420" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="be2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="iam" target="benef">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="instr" value="Inheritance instruction service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="420" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="be3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="iam" target="instr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="subs" value="Subscription management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="420" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="be4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="iam" target="subs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="estate" value="ESTATE MANAGEMENT ENGINE\nAsset mapping • Instruction orchestration • Estate plan management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5f3df;strokeColor=#398653;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="540" width="840" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="es0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="profile" target="estate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="discovery" target="estate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="benef" target="estate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="instr" target="estate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="subs" target="estate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vault" value="ENCRYPTED ASSET &amp; METADATA VAULT\nEncrypted records • Estate instructions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="680" width="450" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="keys" value="CRYPTOGRAPHIC KEY MANAGEMENT\nKey splitting • Secure shares • Quorum checks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="625" y="680" width="450" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="secure" value="SECURE EXECUTION ENVIRONMENT\nScoped decryption • Isolated processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="680" width="450" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="esec0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="estate" target="vault">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="esec1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="estate" target="keys">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="esec2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="estate" target="secure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="claim" value="CLAIM MANAGEMENT &amp; VERIFICATION\nDocument validation • Death verification • Grace period • Disputes • Authority approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f1;strokeColor=#bd477a;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="820" width="1000" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ec0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="vault" target="claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ec1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="keys" target="claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ec2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="secure" target="claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="exec" value="EXECUTION ENGINE\nAuthorised action orchestration • Partner request management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eee8ff;strokeColor=#7b61a8;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="960" width="800" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ex1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="claim" target="exec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cancel" value="Subscription cancellation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1080" width="360" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ex2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="exec" target="cancel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mandate" value="Payment mandate revocation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1080" width="360" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ex3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="exec" target="mandate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="transfer" value="Digital asset transfer &amp; recovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1080" width="360" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ex4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="exec" target="transfer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="family" value="Family digital access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="1080" width="360" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ex5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="exec" target="family">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="partners" value="EXTERNAL PARTNERS\nSubscription providers • Banks/payment providers • Digital platforms/custodians • Authorised verification sources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f3ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1200" width="1300" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ep0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="cancel" target="partners">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ep1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="mandate" target="partners">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ep2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="transfer" target="partners">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ep3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="family" target="partners">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="audit" value="AUDIT, MONITORING &amp; NOTIFICATION\nTamper-evident logs • Status tracking • Family alerts • Case closure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f2f5;strokeColor=#64748b;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1330" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ea" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="partners" target="audit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="2 - User Registration Journey" id="registration">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1300" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="rt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0f172a;fontSize=13;fontStyle=1;fontColor=light-dark(#ffffff, #ededed);" value="HEIRFLOW — USER REGISTRATION JOURNEY" vertex="1">
+          <mxGeometry height="50" width="600" x="440" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="r0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="START — Open HeirFlow" vertex="1">
+          <mxGeometry height="50" width="220" x="60" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Create account" vertex="1">
+          <mxGeometry height="50" width="210" x="310" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="rl1" edge="1" parent="1" source="r0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Verify email / phone" vertex="1">
+          <mxGeometry height="50" width="190" x="555" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="rl2" edge="1" parent="1" source="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Complete identity verification" vertex="1">
+          <mxGeometry height="50" width="285" x="780" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="rl3" edge="1" parent="1" source="r2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Accept privacy terms &amp; consent" vertex="1">
+          <mxGeometry height="50" width="290" x="1120" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="rl4" edge="1" parent="1" source="r3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Discover digital footprint" vertex="1">
+          <mxGeometry height="50" width="290" x="1120" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="rl5" edge="1" parent="1" source="r4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Connect available sources OR manually add assets" vertex="1">
+          <mxGeometry height="50" width="300" x="780" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="rl6" edge="1" parent="1" source="r5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Review detected accounts, subscriptions, files &amp; digital assets" vertex="1">
+          <mxGeometry height="50" width="250" x="510" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="rl7" edge="1" parent="1" source="r6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Confirm asset inventory" vertex="1">
+          <mxGeometry height="50" width="250" x="60" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="rl8" edge="1" parent="1" source="r7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Create instructions: TRANSFER / RECOVER / CANCEL" vertex="1">
+          <mxGeometry height="50" width="250" x="60" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="rl9" edge="1" parent="1" source="r8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Assign nominees / beneficiaries" vertex="1">
+          <mxGeometry height="50" width="190" x="335" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="rl10" edge="1" parent="1" source="r9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r10" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Verify nominees &amp; define permissions" vertex="1">
+          <mxGeometry height="50" width="285" x="555" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="rl11" edge="1" parent="1" source="r10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Configure key-sharing / quorum rules" vertex="1">
+          <mxGeometry height="60" width="275" x="870" y="245" as="geometry" />
+        </mxCell>
+        <mxCell id="rl12" edge="1" parent="1" source="r11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Encrypt and securely store estate information" vertex="1">
+          <mxGeometry height="60" width="220" x="1175" y="245" as="geometry" />
+        </mxCell>
+        <mxCell id="rl13" edge="1" parent="1" source="r12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Distribute key shares to trusted nominees" vertex="1">
+          <mxGeometry height="50" width="220" x="1175" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="rl14" edge="1" parent="1" source="r13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Review and activate estate plan" vertex="1">
+          <mxGeometry height="60" width="265" x="880" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="rl15" edge="1" parent="1" source="r14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r15" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Periodic review and update" vertex="1">
+          <mxGeometry height="70" width="380" x="430" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="rl16" edge="1" parent="1" source="r15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r16" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rnote" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="At any time: update assets • nominees • instructions • permissions" vertex="1">
+          <mxGeometry height="40" width="290" x="1000" y="1280" as="geometry" />
+        </mxCell>
+        <mxCell id="rloop" edge="1" parent="1" source="r16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="r5" value="Update plan">
+          <mxGeometry relative="1" x="-0.4833" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="430" />
+              <mxPoint x="1510" y="430" />
+              <mxPoint x="1510" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="3 - Inheritance Claim Journey" id="claimjourney">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1400" pageHeight="1650" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ct" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0f172a;fontSize=13;fontStyle=1;fontColor=light-dark(#ffffff, #ededed);" value="HEIRFLOW — INHERITANCE CLAIM JOURNEY" vertex="1">
+          <mxGeometry height="50" width="700" x="360" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="TRIGGER — User&#39;s death" vertex="1">
+          <mxGeometry height="40" width="250" x="150" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Nominee opens HeirFlow and authenticates" vertex="1">
+          <mxGeometry height="50" width="310" x="435.38" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cl1" edge="1" parent="1" source="c0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Initiate inheritance claim" vertex="1">
+          <mxGeometry height="30" width="203.46" x="779.86" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="cl2" edge="1" parent="1" source="c1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Submit death certificate / supporting evidence" vertex="1">
+          <mxGeometry height="30" width="276.92" x="1005.38" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="cl3" edge="1" parent="1" source="c2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Submit assigned key share" vertex="1">
+          <mxGeometry height="30" width="184.62" x="1045.38" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f1;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Validate documents and nominee identity" vertex="1">
+          <mxGeometry height="40" width="184.62" x="815.38" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="cl5" edge="1" parent="1" source="c4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f1;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Verify death through authorised source, where available" vertex="1">
+          <mxGeometry height="40" width="210" x="552.9999999999999" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="cl6" edge="1" parent="1" source="c5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f1;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="VERIFICATION SUCCESSFUL?" vertex="1">
+          <mxGeometry height="30" width="276.92" x="245.37999999999988" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="cl7" edge="1" parent="1" source="c6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="c7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="chold" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#bf4545;fontSize=13;fontStyle=1;fontColor=#000000;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;NO - HOLD CLAIM&lt;/font&gt;&lt;br&gt;Request more evidence / manual review" vertex="1">
+          <mxGeometry height="60" width="220" x="149.99999999999994" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="cgrace" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="YES — Notify registered devices &amp; contacts; start grace period" vertex="1">
+          <mxGeometry height="60" width="286.67" x="394" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="cno" edge="1" parent="1" source="c7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontStyle=1" target="chold" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cyes" edge="1" parent="1" source="c7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="cgrace" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cdispute" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="OBJECTION OR DISPUTE RAISED?" vertex="1">
+          <mxGeometry height="50" width="184.62" x="700" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="cgdis" edge="1" parent="1" source="cgrace" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="cdispute" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="creview" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#bf4545;fontSize=13;fontStyle=1;fontColor=#000000;" value="YES - Pause claim &amp;amp; conduct manual review" vertex="1">
+          <mxGeometry height="50" width="194.12" x="710" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="cauth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eee8ff;strokeColor=#7b61a8;fontSize=13;fontStyle=1;" value="NO — Verify nominee authority, asset permissions &amp; key-share quorum" vertex="1">
+          <mxGeometry height="50" width="252.94" x="935.38" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="cdy" edge="1" parent="1" source="cdispute" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontStyle=1" target="creview" value="Yes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="797.68" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cdn" edge="1" parent="1" source="cdispute" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontStyle=1" target="cauth" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="capprove" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="ALL APPROVAL CHECKS PASSED?" vertex="1">
+          <mxGeometry height="50" width="184.62" x="969.5400000000001" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="cap" edge="1" parent="1" source="cauth" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="capprove" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="chold2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#bf4545;fontSize=13;fontStyle=1;fontColor=#000000;" value="NO - Hold / escalate for review" vertex="1">
+          <mxGeometry height="40" width="203.46" x="1188.3200000000002" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="cexec" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="YES - Securely reconstruct approved access &amp;amp; authorise execution" vertex="1">
+          <mxGeometry height="60" width="286.67" x="908.9800000000001" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="cay" edge="1" parent="1" source="capprove" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontStyle=1" target="cexec" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="can" edge="1" parent="1" source="capprove" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontStyle=1" target="chold2" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="Execute approved actions • Track partner responses • Notify family • Audit &amp; close claim" vertex="1">
+          <mxGeometry height="60" width="297.79" x="388.44000000000005" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="cfinal" edge="1" parent="1" source="cexec" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="cend" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m_5f9hZgStscgG9Mr4u9-6" edge="1" parent="1" source="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.538;entryY=0.022;entryDx=0;entryDy=0;entryPerimeter=0;defaultLabelBackgroundColor=page;labelPadding=0 4;fontStyle=1;strokeColor=default;curved=0;strokeWidth=2;" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="4 - Secure Data Flow" id="dataflow">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1500" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0f172a;fontSize=13;fontStyle=1;fontColor=light-dark(#ffffff, #ededed);textShadow=0;" value="HEIRFLOW — SECURE DATA FLOW" vertex="1">
+          <mxGeometry height="50" width="600" x="374.28" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="du" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;USER / NOMINEE DEVICE&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Personal details • Asset details • Claim evidence&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="342.86" x="190" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="dtls" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;ENCRYPTION IN TRANSIT&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;TLS • Secure upload&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="260" x="598.57" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="dl1" edge="1" parent="1" source="du" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dtls" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dapi" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;API GATEWAY &amp;amp; AUTHENTICATION&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Identity • Session • Role / consent checks&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="320" x="887.14" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="dl2" edge="1" parent="1" source="dtls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dapi" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dback" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;BACKEND VALIDATION &amp;amp; PROCESSING&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Validate input • Apply access policy • Minimise data&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="428.57" x="460" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="dl3" edge="1" parent="1" source="dapi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dback" value="">
+          <mxGeometry relative="1" x="-0.492" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dmeta" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;ENCRYPTED ASSET METADATA&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Asset inventory • Subscription details • Instructions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="260" x="269" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dbdmeta" edge="1" parent="1" source="dback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dmeta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="674.3" y="250" />
+              <mxPoint x="402.9" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dkey" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;KEY MANAGEMENT&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Split key shares • Quorum • Key custody&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="260" x="544.29" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dbdkey" edge="1" parent="1" source="dback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dkey" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ddoc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CLAIM EVIDENCE STORE&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Restricted documents • Validation status&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="280" x="820" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dbddoc" edge="1" parent="1" source="dback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="ddoc" value="">
+          <mxGeometry relative="1" x="0.7402" as="geometry">
+            <Array as="points">
+              <mxPoint x="674.3" y="250" />
+              <mxPoint x="970" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dvault" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="ENCRYPTED VAULT / DATABASE&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Encrypted records • Access-controlled storage&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="302.86" x="250" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="dshares" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;NOMINEE KEY SHARES&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Separately held shares; no complete key stored&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="568.57" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="dverify" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f1;strokeColor=#bd477a;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CLAIM &amp;amp; AUTHORITY VERIFICATION&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Evidence • Official source (if available) • Permissions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="274.28" x="887.1400000000001" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" edge="1" parent="1" source="dmeta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dvault" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" edge="1" parent="1" source="dkey" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dshares" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" edge="1" parent="1" source="ddoc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dverify" value="">
+          <mxGeometry relative="1" x="-0.3695" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="387.5" />
+              <mxPoint x="1024.3" y="387.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dgate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;AUTHORISATION GATE&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Claim valid • Grace period complete • Quorum met • Scope approved&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="395" x="516.07" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="dg0" edge="1" parent="1" source="dvault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dgate" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dg1" edge="1" parent="1" source="dshares" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dgate" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dg2" edge="1" parent="1" source="dverify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dgate" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dsecure" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;ISOLATED SECURE EXECUTION ENVIRONMENT&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Scoped decryption • Minimum necessary data • Signed action plan&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="700" x="363.57" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" edge="1" parent="1" source="dgate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dsecure" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dpartner" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="AUTHORISED PARTNER CONNECTORS&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Only required action data sent through authenticated encrypted channels&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="700" x="363.57" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" edge="1" parent="1" source="dsecure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dpartner" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dlog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f2f5;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;PARTNER RESPONSES &amp;amp; AUDIT&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Status • Acknowledgement • Errors • Tamper-evident logs&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="700" x="363.57" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" edge="1" parent="1" source="dpartner" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="dlog" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dnote" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fillColor=#F9FF63;strokeColor=#d79b00;" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;SECURITY PRINCIPLE&lt;/font&gt;&lt;br&gt;&lt;/span&gt;decrypt only the minimum information needed for each authorised operation." vertex="1">
+          <mxGeometry height="85" width="220" x="70" y="173" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="5 - Partner Account Operations" id="partnerops">
+    <mxGraphModel dx="1967" dy="1429" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0f172a;fontSize=13;fontStyle=1;fontColor=light-dark(#ffffff, #ededed);" value="HEIRFLOW — CROSS-PLATFORM ACCOUNT OPERATIONS" vertex="1">
+          <mxGeometry height="50" width="900" x="260" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pexec" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eee8ff;strokeColor=#7b61a8;fontSize=13;fontStyle=1;" value="HEIRFLOW EXECUTION ENGINE&lt;br&gt;Approved instruction • Beneficiary scope • Evidence • Audit reference" vertex="1">
+          <mxGeometry height="75" width="512.27" x="450.56" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="phub" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="PARTNER INTEGRATION LAYER&lt;br&gt;API adapters • Webhooks • Secure request queue • Manual workflow fallback" vertex="1">
+          <mxGeometry height="75" width="450" x="481.69" y="245" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" edge="1" parent="1" source="pexec" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="phub" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psubh" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f3ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="A. SUBSCRIPTION PROVIDERS" vertex="1">
+          <mxGeometry height="50" width="291.67" x="90" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="psub0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Identify subscription" vertex="1">
+          <mxGeometry height="34" width="210" x="130.83" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="psub0e" edge="1" parent="1" source="psubh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psub1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Identify merchant / billing channel" vertex="1">
+          <mxGeometry height="40" width="225.81" x="122.93" y="496" as="geometry" />
+        </mxCell>
+        <mxCell id="psub1e" edge="1" parent="1" source="psub0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psub2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Check supported cancellation method" vertex="1">
+          <mxGeometry height="40" width="200" x="135.84" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="psub2e" edge="1" parent="1" source="psub1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psub3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Send authorised API / webhook / manual request" vertex="1">
+          <mxGeometry height="40" width="225.81" x="122.93" y="604" as="geometry" />
+        </mxCell>
+        <mxCell id="psub3e" edge="1" parent="1" source="psub2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psub4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Receive acknowledgement" vertex="1">
+          <mxGeometry height="40" width="225.81" x="122.93" y="653.84" as="geometry" />
+        </mxCell>
+        <mxCell id="psub4e" edge="1" parent="1" source="psub3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psub5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Update cancellation status" vertex="1">
+          <mxGeometry height="40" width="225.81" x="122.93" y="717.84" as="geometry" />
+        </mxCell>
+        <mxCell id="psub5e" edge="1" parent="1" source="psub4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psub5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psubres" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="RESULT / STATUS UPDATE" vertex="1">
+          <mxGeometry height="40" width="233" x="119.33" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="psubre" edge="1" parent="1" source="psub5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="psubres" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbankh" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f3ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="B. BANKS &amp; PAYMENT PROVIDERS" vertex="1">
+          <mxGeometry height="50" width="291.67" x="400" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Identify recurring mandate" vertex="1">
+          <mxGeometry height="34" width="191.94" x="450" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank0e" edge="1" parent="1" source="pbankh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Prepare evidence and authority" vertex="1">
+          <mxGeometry height="34" width="191.93" x="449.87" y="502" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank1e" edge="1" parent="1" source="pbank0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Submit authorised revocation request" vertex="1">
+          <mxGeometry height="34" width="191.94" x="449.86" y="558" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank2e" edge="1" parent="1" source="pbank1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Provider reviews request" vertex="1">
+          <mxGeometry height="34" width="191.94" x="450" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank3e" edge="1" parent="1" source="pbank2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Receive approval / rejection / pending status" vertex="1">
+          <mxGeometry height="40" width="200" x="445.97" y="674" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank4e" edge="1" parent="1" source="pbank3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Update mandate status" vertex="1">
+          <mxGeometry height="34" width="210" x="440.96000000000004" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="pbank5e" edge="1" parent="1" source="pbank4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbank5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pbankres" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="RESULT / STATUS UPDATE" vertex="1">
+          <mxGeometry height="40" width="200" x="441.8" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="pbankre" edge="1" parent="1" source="pbank5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pbankres" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passeth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f3ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="C. DIGITAL PLATFORMS &amp; CUSTODIANS" vertex="1">
+          <mxGeometry height="50" width="270" x="710" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="passet0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Identify asset &amp; custodian" vertex="1">
+          <mxGeometry height="34" width="225.81" x="732.1" y="434" as="geometry" />
+        </mxCell>
+        <mxCell id="passet0e" edge="1" parent="1" source="passeth" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passet1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Check platform-specific inheritance rules" vertex="1">
+          <mxGeometry height="40" width="225.81" x="732.09" y="488" as="geometry" />
+        </mxCell>
+        <mxCell id="passet1e" edge="1" parent="1" source="passet0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passet2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Submit authorised recovery / transfer request" vertex="1">
+          <mxGeometry height="34" width="191.94" x="749.02" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="passet2e" edge="1" parent="1" source="passet1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passet3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Platform verifies claimant and documents" vertex="1">
+          <mxGeometry height="34" width="178.4" x="755.7900000000001" y="609.84" as="geometry" />
+        </mxCell>
+        <mxCell id="passet3e" edge="1" parent="1" source="passet2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passet4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Complete permitted recovery / transfer" vertex="1">
+          <mxGeometry height="34" width="146.77" x="771.62" y="674" as="geometry" />
+        </mxCell>
+        <mxCell id="passet4e" edge="1" parent="1" source="passet3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passet5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" value="Update asset status" vertex="1">
+          <mxGeometry height="34" width="127.01" x="781.48" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="passet5e" edge="1" parent="1" source="passet4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;" target="passet5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="passetres" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="RESULT / STATUS UPDATE" vertex="1">
+          <mxGeometry height="40" width="178.4" x="755.81" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="passetre" edge="1" parent="1" source="passet5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="passetres" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamilyh" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f3ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="D. FAMILY ACCESS" vertex="1">
+          <mxGeometry height="50" width="282.93" x="999.9999999999999" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Identify approved files / records" vertex="1">
+          <mxGeometry height="30.16" width="220.26" x="1031.3300000000002" y="434" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily0e" edge="1" parent="1" source="pfamilyh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Check beneficiary permissions" vertex="1">
+          <mxGeometry height="30.16" width="170.26" x="1056.3300000000002" y="488" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily1e" edge="1" parent="1" source="pfamily0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Generate restricted access package" vertex="1">
+          <mxGeometry height="34" width="191.94" x="1045.49" y="535.9999999999999" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily2e" edge="1" parent="1" source="pfamily1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Provide secure time-limited access" vertex="1">
+          <mxGeometry height="40" width="154.85" x="1064.0400000000002" y="592" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily3e" edge="1" parent="1" source="pfamily2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Family retrieves permitted information" vertex="1">
+          <mxGeometry height="40" width="146.77" x="1068.0800000000002" y="653.84" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily4e" edge="1" parent="1" source="pfamily3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=13;fontStyle=1;" value="Expire access token / package" vertex="1">
+          <mxGeometry height="40" width="178.4" x="1052.2600000000002" y="717.84" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamily5e" edge="1" parent="1" source="pfamily4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamily5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamilyres" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="RESULT / STATUS UPDATE" vertex="1">
+          <mxGeometry height="40" width="200" x="1041.46" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="pfamilyre" edge="1" parent="1" source="pfamily5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pfamilyres" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="phandler" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2ff;strokeColor=#3973ac;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CENTRAL RESPONSE HANDLER&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Validate partner response • Match request ID • Update operation state&lt;/font&gt;" vertex="1">
+          <mxGeometry height="75" width="800" x="296.80000000000007" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="psubm" edge="1" parent="1" source="psubres" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" value="">
+          <mxGeometry relative="1" x="0.336" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="880" />
+              <mxPoint x="660" y="880" />
+            </Array>
+            <mxPoint x="660" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pbankm" edge="1" parent="1" source="pbankres" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="phandler" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="541.8" y="880" />
+              <mxPoint x="660" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="passetm" edge="1" parent="1" source="passetres" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="phandler" value="">
+          <mxGeometry relative="1" x="-0.7037" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="880" />
+              <mxPoint x="660" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pfamilym" edge="1" parent="1" source="pfamilyres" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="phandler" value="">
+          <mxGeometry relative="1" x="-0.3713" as="geometry">
+            <Array as="points">
+              <mxPoint x="1141.5" y="880" />
+              <mxPoint x="660" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pdecision" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2d6;strokeColor=#c58b2a;fontSize=13;fontStyle=1;" value="OPERATION COMPLETED?" vertex="1">
+          <mxGeometry height="50" width="300" x="546.8000000000001" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="pd" edge="1" parent="1" source="phandler" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="pdecision" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="psuccess" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f7ed;strokeColor=#398653;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;SUCCESS&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Update estate dashboard • Notify nominee • Audit log&lt;/font&gt;" vertex="1">
+          <mxGeometry height="75" width="340" x="130.83" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="pfail" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#bf4545;fontSize=13;fontStyle=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;PENDING / FAILED&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Retry where safe • Escalate • Manual partner process&lt;/font&gt;" vertex="1">
+          <mxGeometry height="75" width="360" x="988.54" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="py" edge="1" parent="1" source="pdecision" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=18;" target="psuccess" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pn" edge="1" parent="1" source="pdecision" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=18;" target="pfail" value="No / pending">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
