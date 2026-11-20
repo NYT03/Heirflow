@@ -96,4 +96,3 @@ router.delete('/:id', auth, (req, res) => {
 });
 
 module.exports = router;
-

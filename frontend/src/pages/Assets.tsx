@@ -1,5 +1,5 @@
-import React, { useEffect, useState, Fragment } from 'react';
-import { Plus, Pencil, Trash2, Building2, Bitcoin, CreditCard, FolderOpen, Home, Share2, X, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Pencil, Trash2, Building2, Bitcoin, CreditCard, FolderOpen, Home, Share2, X } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
 import api from '../api/client';

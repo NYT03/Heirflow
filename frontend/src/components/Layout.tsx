@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Database, Users, FileText, AlertCircle, Menu, X, LogOut, Lock } from 'lucide-react';
+import { LayoutDashboard, Database, Users, FileText, AlertCircle, Menu, LogOut, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 

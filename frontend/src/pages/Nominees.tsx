@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Eye, EyeOff, Trash2, Pencil, X, Users, Key, Info } from 'lucide-react';
+import { Plus, Eye, EyeOff, Trash2, Pencil, X, Users, Key } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
 import api from '../api/client';
@@ -11,7 +11,7 @@ const RELATIONSHIPS = ['Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Lawyer
 const DEFAULT_FORM = { name: '', email: '', phone: '', relationship: 'Spouse', permissions: { view_assets: true, claim_assets: true } };
 
 const maskShare = (share: string) => {
-  if (!share) return 'KS-****-****-' + '????';
+  if (!share) return 'KS-****-****-????';
   const last4 = share.slice(-4);
   return `KS-****-****-${last4}`;
 };
