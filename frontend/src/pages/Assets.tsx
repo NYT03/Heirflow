@@ -248,7 +248,7 @@ const Assets: React.FC = () => {
                     )}
                   </div>
                   <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-800/60 flex justify-between items-center">
-                    <span>Added {new Date(asset.created_at).toLocaleDateString()}</span>
+                    <span>Added {asset.created_at ? new Date(asset.created_at).toLocaleDateString() : 'Recently'}</span>
                   </div>
                 </div>
               );

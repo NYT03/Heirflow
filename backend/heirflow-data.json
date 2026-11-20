@@ -17,6 +17,15 @@
       "phone": "+1-555-0202",
       "kyc_status": "pending",
       "created_at": "2026-11-20T08:14:58.661Z"
+    },
+    {
+      "id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "name": "Tejas Raval",
+      "email": "2x3osjs@gmail.com",
+      "password_hash": "$2b$10$HVKk0YOpmW7mC/pr7D3KJuq5pdq.K77/TBHDtpykp1EA7WjqhzvnS",
+      "phone": "6353852813",
+      "kyc_status": "pending",
+      "created_at": "2026-11-20T09:16:13.248Z"
     }
   ],
   "assets": [
@@ -59,6 +68,136 @@
       "instructions": "Contact HDFC Bank estate nodal officer with death certificate and probate/succession certificate to claim balance.",
       "nominee_id": null,
       "created_at": "2026-11-20T08:16:29.037Z"
+    },
+    {
+      "id": "fb9bde51-f979-4f97-a922-9ed829b36c5c",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "file",
+      "name": "Google Photos Primary Library & Cloud Archive",
+      "details": "{\"account\":\"2x3osjs@gmail.com\",\"service\":\"Google Photos\",\"highResCount\":14250,\"sharedAlbums\":[\"Family Archive 2018-2026\",\"Vacations & Celebrations\",\"Documents & Receipts\"],\"googleOneStorageTier\":\"100 GB Plan\"}",
+      "instructions": "Contains 10+ years of unbacked personal and family photos. Nominee should request Google Takeout or account manager transfer.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.569Z"
+    },
+    {
+      "id": "5016d033-2297-4e7d-9e36-c56ec5e522e1",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "file",
+      "name": "Google Drive Family Documents & Media Vault",
+      "details": "{\"account\":\"2x3osjs@gmail.com\",\"keyFolders\":[\"Scanned Family Certificates\",\"Medical Records\",\"House Deeds & Photos\"]}",
+      "instructions": "Designated nominee should be granted full Google Drive Takeout permissions upon verified claim.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.570Z"
+    },
+    {
+      "id": "7173dfcf-dc9b-44a1-95bd-fc9cabb2be02",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "bank",
+      "name": "Google Pay (GPay UPI)",
+      "details": "{\"upiId\":\"2x3osjs@okhdfcbank\",\"secondaryUpiId\":\"2x3osjs@okaxis\",\"linkedBank\":\"HDFC Bank Ltd\",\"accountType\":\"Savings Account\",\"registeredEmail\":\"2x3osjs@gmail.com\",\"verificationSource\":\"Google Pay Registered Profile\"}",
+      "instructions": "Contact HDFC Bank estate nodal officer with death certificate and probate/succession certificate to claim balance.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.570Z"
+    },
+    {
+      "id": "f41d690f-f9e3-4f17-ad80-c716e5922d79",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "bank",
+      "name": "PhonePe UPI & Wallet",
+      "details": "{\"upiId\":\"2x3osjs@ybl\",\"linkedBank\":\"State Bank of India (SBI)\",\"registeredEmail\":\"2x3osjs@gmail.com\",\"walletBalanceDetected\":true}",
+      "instructions": "File nominee claim on PhonePe support portal and notify SBI branch manager.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.571Z"
+    },
+    {
+      "id": "1d557584-39ed-4b84-949c-f8bae3ee8c79",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "bank",
+      "name": "ICICI Direct Trading & Demat Account",
+      "details": "{\"service\":\"ICICI Direct\",\"registeredEmail\":\"2x3osjs@gmail.com\",\"accountType\":\"Demat & 3-in-1 Investment Account\",\"associatedPanNotice\":\"PAN linked via e-statements received on this Gmail\"}",
+      "instructions": "Submit transmission request form (Form T2) with death certificate to ICICI Securities registrar.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.571Z"
+    },
+    {
+      "id": "68edcc7a-f10a-4d30-b671-2ab11984e3f4",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "crypto",
+      "name": "Binance Global Exchange Account",
+      "details": "{\"loginEmail\":\"2x3osjs@gmail.com\",\"twoFactorMethod\":\"Google Authenticator\",\"detectedActivity\":\"Spot trading, Staking, Earn balance\",\"lastActiveNotice\":\"Recent withdrawal / deposit verification emails detected\"}",
+      "instructions": "Nominee must submit case to Binance Support under \"Deceased Account Holder\" with estate legal certificate and HeirFlow key share.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.572Z"
+    },
+    {
+      "id": "c9e655e6-035b-4b12-924a-e273ce56d0c9",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "crypto",
+      "name": "CoinDCX Indian Crypto Exchange Account",
+      "details": "{\"loginEmail\":\"2x3osjs@gmail.com\",\"kycStatus\":\"Verified (Aadhaar & PAN linked)\",\"registeredPhoneNotice\":\"SMS OTP required\"}",
+      "instructions": "Contact CoinDCX compliance officer for nominee transmission process.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.572Z"
+    },
+    {
+      "id": "bbea62b2-2da0-4ab4-97b2-a95b02ef793b",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "crypto",
+      "name": "Web3 Ethereum / Polygon Self-Custody Wallet",
+      "details": "{\"backupType\":\"Encrypted Vault Backup Reference found in Drive/Gmail notes\",\"network\":\"Ethereum Mainnet & Polygon\",\"recoveryHint\":\"Recovery phrase split across HeirFlow Shamir secret shares\"}",
+      "instructions": "Assemble Shamir key shares from nominees to reconstruct master seed phrase.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.573Z"
+    },
+    {
+      "id": "9dc5da64-a2ed-47c9-9384-1bb441d4795e",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "property",
+      "name": "Residential Apartment (Municipal Property Tax Assessment)",
+      "details": "{\"propertyType\":\"Residential Flat / Apartment\",\"assessmentNumber\":\"PT-2024-8849201\",\"source\":\"Annual Municipal Property Tax E-Receipt in Gmail\",\"registeredOwner\":\"Account Holder (via Gmail notifications)\",\"deedStatus\":\"Registered sale deed copy stored in Google Drive vault\"}",
+      "instructions": "Nominee must present death certificate to Municipal Land & Revenue Dept for Khata / Title transfer.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.573Z"
+    },
+    {
+      "id": "aec2b3e7-11e8-4c9e-ad96-3c43861ca437",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "property",
+      "name": "HDFC Bank Home Loan & Original Title Deed Escrow",
+      "details": "{\"loanAccountNumber\":\"HL-****9412\",\"originalDeedLocation\":\"HDFC Bank Custody / Escrow Branch\",\"insurancePolicy\":\"Home loan term protection policy linked\"}",
+      "instructions": "Claim home loan insurance cover to clear outstanding mortgage balance, then retrieve original title deed.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.574Z"
+    },
+    {
+      "id": "78946c3b-707c-453a-acec-9760cffa8692",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "subscription",
+      "name": "Zerodha Kite (Stock & MF Portfolio)",
+      "details": "{\"authMethod\":\"Google Sign-In with 2x3osjs@gmail.com\",\"serviceType\":\"Equity & Mutual Fund Investments\"}",
+      "instructions": "Transfer shares via CDSL e-Voting / NSDL physical transmission form to nominee.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.574Z"
+    },
+    {
+      "id": "3fe2cb80-6a7d-4e7e-ba1f-3ef60d9ad9ac",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "file",
+      "name": "DigiLocker National Identity & Asset Vault",
+      "details": "{\"authMethod\":\"Google Sign-In + Aadhaar OTP\",\"storedDocuments\":[\"Aadhaar Card\",\"PAN Card\",\"Vehicle RC\",\"Property Tax Records\",\"Class 10/12 Marksheets\"]}",
+      "instructions": "Crucial repository for official identity and property documents required during probate.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.574Z"
+    },
+    {
+      "id": "5672cdf1-e2f5-4086-a3fc-960ccb88014b",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "type": "subscription",
+      "name": "Google One 100GB Cloud Subscription & Family Share",
+      "details": "{\"plan\":\"100 GB Cloud Storage Plan\",\"familySharing\":\"Enabled (2 family members enrolled)\",\"billing\":\"Auto-renew via Google Play\"}",
+      "instructions": "Ensure inactive account manager (Google Inactive Account Manager) triggers data download to nominee before billing stops.",
+      "nominee_id": null,
+      "created_at": "2026-11-20T09:17:03.575Z"
     }
   ],
   "nominees": [
@@ -72,6 +211,17 @@
       "key_share": "HEIRFLOW-SHARE-73AA27D7F2B241189899BD55",
       "permissions": "{\"can_view_assets\":true,\"can_initiate_claims\":true,\"can_access_files\":true}",
       "created_at": "2026-11-20T08:14:58.661Z"
+    },
+    {
+      "id": "583a9afe-8d58-48aa-ab36-fe6dd43e7f99",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "name": "Nikhil",
+      "email": "nikhilraval@gmail.com",
+      "phone": "9959595955",
+      "relationship": "Sibling",
+      "key_share": "HEIRFLOW-SHARE-93721B0A-09104B1D-A0000505",
+      "permissions": "{\"view_assets\":true,\"claim_assets\":true}",
+      "created_at": "2026-11-20T09:21:13.432Z"
     }
   ],
   "claims": [],
@@ -104,6 +254,62 @@
       "action": "ASSETS_IMPORTED_FROM_GOOGLE",
       "details": "{\"count\":2,\"assetNames\":[\"Google Photos Primary Library & Cloud Archive\",\"Google Pay (GPay UPI)\"]}",
       "created_at": "2026-11-20T08:16:29.038Z"
+    },
+    {
+      "id": "819e8b2b-140f-4e5b-91c6-88080f6dc497",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "USER_REGISTERED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\"}",
+      "created_at": "2026-11-20T09:16:13.249Z"
+    },
+    {
+      "id": "1993afd5-a68a-4aa1-999c-d50abec4f50e",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T09:16:44.898Z"
+    },
+    {
+      "id": "5b79f066-8cf0-46ee-ad4c-a2620de27cec",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "ASSETS_IMPORTED_FROM_GOOGLE",
+      "details": "{\"count\":13,\"assetNames\":[\"Google Photos Primary Library & Cloud Archive\",\"Google Drive Family Documents & Media Vault\",\"Google Pay (GPay UPI)\",\"PhonePe UPI & Wallet\",\"ICICI Direct Trading & Demat Account\",\"Binance Global Exchange Account\",\"CoinDCX Indian Crypto Exchange Account\",\"Web3 Ethereum / Polygon Self-Custody Wallet\",\"Residential Apartment (Municipal Property Tax Assessment)\",\"HDFC Bank Home Loan & Original Title Deed Escrow\",\"Zerodha Kite (Stock & MF Portfolio)\",\"DigiLocker National Identity & Asset Vault\",\"Google One 100GB Cloud Subscription & Family Share\"]}",
+      "created_at": "2026-11-20T09:17:03.576Z"
+    },
+    {
+      "id": "78e901eb-f7d4-48ce-83ed-71df76471845",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T09:17:50.045Z"
+    },
+    {
+      "id": "0cf7d216-d2a9-4808-9063-03bfa86b3b05",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T09:17:52.676Z"
+    },
+    {
+      "id": "e9def00a-a287-468f-ab55-f09c6a0c74d4",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T09:17:53.573Z"
+    },
+    {
+      "id": "36ff98cd-78d8-4678-ad4b-2d037f9e7936",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "GOOGLE_ACCOUNT_SCANNED",
+      "details": "{\"email\":\"2x3osjs@gmail.com\",\"totalDiscovered\":13}",
+      "created_at": "2026-11-20T09:17:55.817Z"
+    },
+    {
+      "id": "c6692238-cd5c-4d88-b2ba-3723e87e885b",
+      "user_id": "60b70590-df73-430b-95bb-46d54e1d69f8",
+      "action": "NOMINEE_ADDED",
+      "details": "{\"nominee_id\":\"583a9afe-8d58-48aa-ab36-fe6dd43e7f99\",\"name\":\"Nikhil\",\"email\":\"nikhilraval@gmail.com\"}",
+      "created_at": "2026-11-20T09:21:13.433Z"
     }
   ],
   "messages": []

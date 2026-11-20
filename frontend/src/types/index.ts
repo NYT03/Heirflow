@@ -8,11 +8,14 @@ export interface User {
 
 export interface Asset {
   id: string;
+  user_id?: string;
   type: string;
   name: string;
   details: any;
   instructions: string;
   nominee_id?: string;
+  nominee_name?: string | null;
+  nominee_email?: string | null;
   created_at?: string;
 }
 
@@ -35,6 +38,10 @@ export interface Claim {
   submitted_at: string;
   grace_until?: string;
   evidence_path?: string;
+  claimant_name?: string;
+  claimant_email?: string;
+  deceased_name?: string;
+  deceased_email?: string;
 }
 
 export interface ClaimAction {
@@ -45,6 +52,8 @@ export interface ClaimAction {
   status: string;
   result_notes?: string;
   executed_at?: string;
+  asset_name?: string;
+  asset_type?: string;
 }
 
 export interface DashboardData {
