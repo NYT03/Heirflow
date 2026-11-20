@@ -5,12 +5,13 @@ frontend/node_modules/
 backend/verification-gate/node_modules/
 
 # Environment variables & secrets
+!*.example
 .env
 .env.*
 *.env
 backend/.env
 frontend/.env
-!*.example
+backend/.env.gcp.example
 
 # Production builds
 dist/
