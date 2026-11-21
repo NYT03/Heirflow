@@ -10,6 +10,9 @@ import {
   Play,
   Ban,
   Key,
+  Lock,
+  Unlock,
+  Copy,
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import AICopilot from '../components/AICopilot';
@@ -17,6 +20,7 @@ import api from '../api/client';
 import { GateClaim } from '../types';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { decryptCredentialPayload } from '../utils/chromePasswordImporter';
 
 const CLAIM_STEPS = ['Pending Quorum', 'Verification', 'Grace Period', 'Executed'];
 
@@ -63,7 +67,41 @@ const NomineeClaim: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [extraShareInputs, setExtraShareInputs] = useState<Record<string, { nomineeId: string; rawShare: string }>>({});
   const [decryptedByClaim, setDecryptedByClaim] = useState<Record<string, any[]>>({});
+  const [vaultPassphrases, setVaultPassphrases] = useState<Record<string, string>>({});
+  const [revealedCredsByAction, setRevealedCredsByAction] = useState<
+    Record<string, { url: string; username: string; password: string; note?: string }>
+  >({});
   const [now, setNow] = useState(Date.now());
+
+  const handleUnlockVaultPassphrase = async (claimId: string) => {
+    const passphrase = (vaultPassphrases[claimId] || '').trim();
+    if (!passphrase) {
+      toast.error('Enter the Vault Passphrase shared by the estate owner.');
+      return;
+    }
+    const items = decryptedByClaim[claimId] || [];
+    const encryptedItems = items.filter((it: any) => it.decrypted?.details?.encryptedCredentials);
+    if (encryptedItems.length === 0) return;
+
+    let unlockedCount = 0;
+    const nextRevealed: Record<string, { url: string; username: string; password: string; note?: string }> = {};
+    for (const item of encryptedItems) {
+      try {
+        const creds = await decryptCredentialPayload(item.decrypted.details.encryptedCredentials, passphrase);
+        nextRevealed[item.actionId] = creds;
+        unlockedCount++;
+      } catch {
+        // wrong passphrase for this item
+      }
+    }
+
+    if (unlockedCount > 0) {
+      setRevealedCredsByAction(prev => ({ ...prev, ...nextRevealed }));
+      toast.success(`Unlocked ${unlockedCount} encrypted password(s) locally in your browser.`);
+    } else {
+      toast.error('Incorrect Vault Passphrase — could not decrypt credentials.');
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -630,21 +668,82 @@ const NomineeClaim: React.FC = () => {
                       </div>
 
                       {decryptedByClaim[claim.claimId] ? (
-                        <div className="space-y-2 pt-2 border-t border-emerald-700/30">
-                          {decryptedByClaim[claim.claimId].map((item: any) => (
-                            <div key={item.actionId} className="bg-slate-900/80 border border-slate-700 rounded-lg p-3 text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="font-semibold text-white">{item.assetName} ({item.assetType})</span>
-                                <span className="text-emerald-400 uppercase font-mono">{item.actionType}</span>
+                        <div className="space-y-3 pt-2 border-t border-emerald-700/30">
+                          {decryptedByClaim[claim.claimId].some((it: any) => it.decrypted?.details?.encryptedCredentials) && (
+                            <div className="p-3 bg-zinc-900/90 border border-zinc-700 rounded-lg space-y-2">
+                              <div className="flex items-center gap-2 text-xs font-medium text-emerald-300">
+                                <Lock className="w-3.5 h-3.5" />
+                                Unlock Masked Chrome Vault Passwords (AES-256-GCM)
                               </div>
-                              <p className="text-slate-300">
-                                <strong>Instructions:</strong> {item.decrypted?.instructions}
-                              </p>
-                              <pre className="text-slate-400 bg-slate-950/70 p-2 rounded overflow-x-auto">
-                                {JSON.stringify(item.decrypted?.details, null, 2)}
-                              </pre>
+                              <div className="flex flex-wrap gap-2">
+                                <input
+                                  type="password"
+                                  value={vaultPassphrases[claim.claimId] || ''}
+                                  onChange={e =>
+                                    setVaultPassphrases(prev => ({ ...prev, [claim.claimId]: e.target.value }))
+                                  }
+                                  placeholder="Enter Vault Passphrase from estate owner"
+                                  className="flex-1 min-w-[200px] bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleUnlockVaultPassphrase(claim.claimId)}
+                                  className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors"
+                                >
+                                  <Unlock className="w-3.5 h-3.5" /> Reveal Passwords
+                                </button>
+                              </div>
                             </div>
-                          ))}
+                          )}
+
+                          {decryptedByClaim[claim.claimId].map((item: any) => {
+                            const revealed = revealedCredsByAction[item.actionId];
+                            const hasEncrypted = Boolean(item.decrypted?.details?.encryptedCredentials);
+                            return (
+                              <div key={item.actionId} className="bg-slate-900/80 border border-slate-700 rounded-lg p-3 text-xs space-y-1.5">
+                                <div className="flex justify-between">
+                                  <span className="font-semibold text-white">{item.assetName} ({item.assetType})</span>
+                                  <span className="text-emerald-400 uppercase font-mono">{item.actionType}</span>
+                                </div>
+                                <p className="text-slate-300">
+                                  <strong>Instructions:</strong> {item.decrypted?.instructions}
+                                </p>
+
+                                {revealed ? (
+                                  <div className="bg-emerald-950/40 border border-emerald-700/40 rounded-lg p-2.5 font-mono text-xs space-y-1 text-emerald-100">
+                                    <div>URL: {revealed.url || '—'}</div>
+                                    <div>Username: {revealed.username || '—'}</div>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span>Password: <strong className="text-white">{revealed.password || '—'}</strong></span>
+                                      {revealed.password && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(revealed.password);
+                                            toast.success('Password copied to clipboard');
+                                          }}
+                                          className="inline-flex items-center gap-1 text-[11px] bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-2 py-0.5 rounded"
+                                        >
+                                          <Copy className="w-3 h-3" /> Copy
+                                        </button>
+                                      )}
+                                    </div>
+                                    {revealed.note && <div>Note: {revealed.note}</div>}
+                                  </div>
+                                ) : hasEncrypted ? (
+                                  <div className="bg-slate-950/70 p-2 rounded text-slate-400 font-mono">
+                                    <div>URL: {item.decrypted?.details?.url || '—'}</div>
+                                    <div>Username: {item.decrypted?.details?.username || '—'}</div>
+                                    <div>Password: •••••••• (enter Vault Passphrase above to reveal)</div>
+                                  </div>
+                                ) : (
+                                  <pre className="text-slate-400 bg-slate-950/70 p-2 rounded overflow-x-auto">
+                                    {JSON.stringify(item.decrypted?.details, null, 2)}
+                                  </pre>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         claim.actions && claim.actions.length > 0 && (
